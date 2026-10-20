@@ -1,10 +1,105 @@
-# ConciliaPyme: guia paso a paso
+# ConciliaPyme: guía paso a paso (versión detallada para Windows)
 
-Oct 19, 2026 · @Jotafonkas
 
 ## Antes de empezar
 
 La guía se sigue en orden, en 7 sesiones; cada paso termina con una verificación para que sepas que funcionó antes de seguir. Si una verificación falla, no avances: arréglala primero.
+
+## Cómo leer esta guía (léelo una vez)
+
+### 1. Dónde se escriben los comandos
+
+1. Abre VS Code en la carpeta del proyecto: menú **File > Open Folder** y elige la carpeta `conciliapyme`.
+2. Abre la terminal integrada: menú **Terminal > New Terminal** (atajo `Ctrl+Ñ`, o `` Ctrl+` `` según tu teclado).
+3. Mira la línea de la terminal: debe terminar con `...\conciliapyme>`. Si no, escribe `cd` seguido de la ruta de la carpeta.
+4. Si la terminal es PowerShell (la línea empieza con `PS`), cámbiala: en la flecha junto al `+` de la terminal, elige **Command Prompt**.
+
+**Un comando por vez.** Copia una línea, pégala con clic derecho, presiona Enter y espera a que termine antes de la siguiente. Si pegas varias líneas juntas y una de ellas pide algo (un login, una confirmación), las siguientes se pierden o se mezclan.
+
+### 2. Los signos `<` y `>` no se escriben
+
+Cuando ves algo como `<tu-usuario>` o `<N>`, significa «pon aquí tu valor» y **debes quitar los signos `<>`**. En `cmd`, `<` y `>` significan «leer/escribir en un archivo» y rompen el comando.
+
+- Mal: `gh project link <2>`
+- Bien: `gh project link 2`
+
+### 3. Cómo crear y editar archivos
+
+Todas las rutas son **relativas a la raíz del proyecto** (la carpeta `conciliapyme`, la que abriste en VS Code). El panel de la izquierda de VS Code se llama **Explorer** (atajo `Ctrl+Shift+E`).
+
+**Crear un archivo nuevo, por ejemplo `src/lib/db.ts`:**
+
+1. En **Explorer**, clic derecho sobre un espacio vacío (o sobre `conciliapyme`) y elige **New File**.
+2. Escribe la ruta completa, `src/lib/db.ts`, y presiona Enter. Si las carpetas `src` o `lib` no existen, VS Code las crea solas.
+3. Se abre el archivo vacío: pega el código de la guía.
+4. Guarda con `Ctrl+S`.
+
+**Abrir un archivo que ya existe:** presiona `Ctrl+P`, escribe parte del nombre (por ejemplo `schema.prisma`) y Enter.
+
+**Reemplazar todo el contenido:** con el archivo abierto, `Ctrl+A` (seleccionar todo), `Ctrl+V` (pegar el código nuevo) y `Ctrl+S`.
+
+**Agregar algo a un archivo sin borrarlo:** ábrelo, ve al lugar que indica la guía, pega y guarda.
+
+**Sobre las comas en `package.json`:** es un archivo JSON. Entre dos elementos va una coma; el último elemento de un bloque no lleva coma. Si VS Code subraya algo en rojo después de editar, casi siempre falta o sobra una coma.
+
+Los archivos que empiezan con punto (`.env`, `.gitignore`, `.husky`) sí aparecen en el Explorer de VS Code.
+
+Antes de cada bloque de código verás un recuadro que dice **ARCHIVO NUEVO** o **ARCHIVO EXISTENTE** con la ruta exacta y qué hacer. Si el recuadro dice «existente» y no encuentras el archivo, probablemente te saltaste un paso anterior.
+
+### 4. Cómo se ve el proyecto al final
+
+```
+conciliapyme/
+├── .github/
+│   ├── workflows/ci.yml
+│   └── dependabot.yml
+├── .husky/                  (hooks de git)
+├── docs/adr/                (decisiones de arquitectura)
+├── e2e/                     (pruebas de navegador)
+├── prisma/
+│   ├── schema.prisma
+│   ├── migrations/
+│   └── seed.ts
+├── public/
+├── src/
+│   ├── app/                 (pantallas y acciones del servidor)
+│   │   ├── api/health/route.ts
+│   │   ├── api/auth/[...nextauth]/route.ts
+│   │   ├── auditoria/ clientes/ conciliacion/ facturas/ importar/ login/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── lib/                 (la lógica de negocio, la que se prueba)
+│   │   ├── cartola/ conciliacion/
+│   │   └── auditoria.ts db.ts format.ts mongo.ts rate-limit.ts rbac.ts rut.ts schemas.ts
+│   ├── models/              (modelos de MongoDB)
+│   ├── types/
+│   └── auth.ts
+├── tests/                   (pruebas unitarias e integración, fixtures/)
+├── .env                     (secretos locales: NO se sube a git)
+├── .env.example             (plantilla: sí se sube)
+├── .nvmrc  .prettierrc  .gitattributes  .dockerignore
+├── Dockerfile  docker-compose.yml
+├── commitlint.config.js  vitest.config.ts  playwright.config.ts
+├── next.config.ts  sonar-project.properties  package.json
+└── README.md  CLAUDE.md  LICENSE
+```
+
+No lo crees de una vez: la guía lo construye paso a paso.
+
+### 5. Al empezar cada sesión
+
+1. Abre Docker Desktop y espera a que diga **Engine running** (desde la sesión 2).
+2. Terminal en la raíz del proyecto: `git status` debe decir `nothing to commit` y estar en la rama `main`.
+3. `git pull` para traer lo último.
+4. Desde la sesión 2: `docker compose up -d`.
+
+### 6. Si algo falla
+
+No sigas al paso siguiente. Copia **el mensaje de error completo** (y el comando que escribiste) y pídele ayuda a Claude con eso. Un error sin su contexto casi nunca se puede diagnosticar.
+
+### 7. Una advertencia sobre OneDrive
+
+Si tu proyecto está dentro de OneDrive (por ejemplo en `Escritorio` o `Documentos`), OneDrive intentará sincronizar la carpeta `node_modules` (decenas de miles de archivos) y todo irá lento. Lo ideal es mover el proyecto a `C:\proyectos\conciliapyme`. Si no puedes, pausa la sincronización de OneDrive mientras trabajas.
 
 ### Requisitos en tu equipo
 
@@ -16,13 +111,13 @@ La guía se sigue en orden, en 7 sesiones; cada paso termina con una verificaci�
 | GitHub CLI | `gh --version` | Instala `gh` desde cli.github.com |
 | VS Code con Claude Code | Abre la carpeta del proyecto | Ya lo usas |
 
-En Windows, ejecuta los comandos en Git Bash o en WSL; los ejemplos son de bash.
+Todos los comandos de esta guía están escritos para **cmd** (Símbolo del sistema de Windows), que es lo que usas en la terminal de VS Code. No necesitas Git Bash ni WSL.
 
 ### Cuentas gratuitas
 
 Crea o confirma estas cuentas antes de la sesión 2. Ninguna debería pedir tarjeta; si alguna la pide, detente y usa el plan B local (`docker compose` y un video de demostración).
 
-- **GitHub:** repositorio público.
+- **GitHub:** repositorio público, con la función Projects activa (se usa en el paso 2.10), y GitHub CLI con el permiso `project` (se concede en el paso 2.10).
 - **Neon:** base PostgreSQL para la demo.
 - **MongoDB Atlas:** clúster gratuito M0.
 - **SonarQube Cloud:** entra con tu cuenta de GitHub.
@@ -60,19 +155,27 @@ Al terminar esta sección tendrás una app Next.js corriendo en tu equipo y un r
 
 ### Paso 1.1: verifica tus herramientas
 
-```bash
-mkdir -p ~/proyectos && cd ~/proyectos
+Si todavía no tienes una carpeta para tus proyectos, créala y entra (si ya existe, el primer comando solo avisa y no pasa nada):
+
+```
+mkdir %USERPROFILE%\proyectos
+cd %USERPROFILE%\proyectos
+```
+
+Verifica cada herramienta, un comando por vez:
+
+```
 node -v
 git --version
 docker --version
 gh --version
 ```
 
-**Verificación:** los cuatro comandos imprimen una versión. Si alguno falla, instala esa herramienta antes de seguir.
+**Verificación:** los cuatro comandos imprimen una versión. Si alguno dice que no se reconoce como comando, instala esa herramienta antes de seguir.
 
 ### Paso 1.2: inicia sesión en GitHub CLI
 
-```bash
+```bat
 gh auth login
 ```
 
@@ -82,7 +185,7 @@ Elige `GitHub.com`, protocolo `HTTPS` y autenticación por navegador; copia el c
 
 ### Paso 1.3: crea la app Next.js
 
-```bash
+```bat
 npx create-next-app@latest conciliapyme --ts --app --eslint --tailwind --src-dir --use-npm
 cd conciliapyme
 ```
@@ -99,14 +202,14 @@ Si el asistente pregunta por opciones adicionales (Turbopack, alias de importaci
 
 Todos tus commits quedarán públicos. En GitHub entra a **Settings > Emails**, activa *Keep my email addresses private* y copia tu dirección `noreply`. Luego, dentro del repo:
 
-```bash
+```bat
 git config user.name "Tu Nombre"
 git config user.email "<id>+<usuario>@users.noreply.github.com"
 ```
 
 ### Paso 1.5: crea el repositorio público y sube el código
 
-```bash
+```bat
 gh repo create conciliapyme --public --source=. --remote=origin --push --description "Bank reconciliation for Chilean SMEs (Next.js, PostgreSQL, MongoDB)"
 ```
 
@@ -118,7 +221,7 @@ gh repo create conciliapyme --public --source=. --remote=origin --push --descrip
 
 ### Paso 1.6: abre el proyecto en VS Code
 
-```bash
+```bat
 code .
 ```
 
@@ -132,7 +235,7 @@ Al terminar tendrás formato, pruebas y commits convencionales automáticos, los
 
 ### Paso 2.1: fija la versión de Node
 
-```bash
+```bat
 node -v > .nvmrc
 ```
 
@@ -140,7 +243,7 @@ node -v > .nvmrc
 
 ### Paso 2.2: instala las herramientas de desarrollo
 
-```bash
+```bat
 npm i -D prettier vitest @vitest/coverage-v8 @playwright/test @commitlint/cli @commitlint/config-conventional husky
 ```
 
@@ -150,13 +253,22 @@ npm i -D prettier vitest @vitest/coverage-v8 @playwright/test @commitlint/cli @c
 
 Crea `.prettierrc`:
 
+> 📄 **ARCHIVO NUEVO:** `.prettierrc`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `.prettierrc` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```json
 { "singleQuote": true, "semi": true }
 ```
 
 ### Paso 2.4: agrega los scripts
 
-En `package.json`, dentro de `scripts`, deja estos (conserva los que ya existen):
+Abre `package.json`, busca el bloque `"scripts": { ... }` y deja estas líneas dentro (conserva las que ya existen). Cada línea termina con coma, excepto la última del bloque:
+
+> 📝 **ARCHIVO EXISTENTE (modificar):** `package.json`
+> 1. Ábrelo con `Ctrl+P`, escribe `package.json` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
 
 ```json
 "typecheck": "tsc --noEmit",
@@ -169,6 +281,11 @@ En `package.json`, dentro de `scripts`, deja estos (conserva los que ya existen)
 ### Paso 2.5: configura Vitest y una prueba de humo
 
 Crea `vitest.config.ts` en la raíz:
+
+> 📄 **ARCHIVO NUEVO:** `vitest.config.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `vitest.config.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -190,6 +307,11 @@ export default defineConfig({
 
 Crea `tests/smoke.test.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `tests/smoke.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/smoke.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import { describe, it, expect } from 'vitest';
 
@@ -204,44 +326,65 @@ describe('smoke', () => {
 
 ### Paso 2.6: commits convencionales automáticos
 
-```bash
+Husky ejecuta comandos automáticamente antes de cada commit: el lint antes de confirmar el commit y la revisión del mensaje. Instálalo:
+
+```
 npx husky init
 ```
 
-Crea los siguientes archivos **con el editor de VS Code**, no con `echo`: en `cmd` y PowerShell, `echo` guarda las comillas dentro del archivo y el hook queda roto (`npm run lint: command not found`). Contenido exacto de cada uno:
+Este comando crea la carpeta `.husky` con un archivo `pre-commit` y agrega un script `prepare` en `package.json`.
 
-`commitlint.config.js`:
+Ahora hay que crear tres archivos más y reescribir uno. **No uses `echo`**: en `cmd`, `echo` guarda las comillas dentro del archivo y el hook queda roto (`npm run lint: command not found`). Tampoco pegues el contenido de los archivos en la terminal: esas líneas van dentro de archivos, no se ejecutan.
 
-```js
-module.exports = { extends: ['@commitlint/config-conventional'] };
-```
-
-`.husky/commit-msg`:
+Para evitar errores, este único comando crea los cuatro archivos con el contenido exacto y con fin de línea correcto (LF). Cópialo completo en una sola línea:
 
 ```
-npx --no -- commitlint --edit $1
+node -e "const fs=require('fs');fs.writeFileSync('.husky/pre-commit','npm run lint\n');fs.writeFileSync('.husky/commit-msg','npx --no -- commitlint --edit $1\n');fs.writeFileSync('commitlint.config.js','module.exports = { extends: [\'@commitlint/config-conventional\'] };\n');fs.writeFileSync('.gitattributes','.husky/* text eol=lf\n')"
 ```
 
-`.husky/pre-commit` (reemplaza lo que creó `husky init`):
+Verifica el contenido de cada archivo:
+
+```
+type .husky\pre-commit
+type .husky\commit-msg
+type commitlint.config.js
+type .gitattributes
+```
+
+Debe mostrar, en ese orden:
 
 ```
 npm run lint
-```
-
-Guarda los archivos de `.husky` con fin de línea **LF** (abajo a la derecha en VS Code, haz clic en `CRLF` y elige `LF`), y crea `.gitattributes` con esta línea para que no vuelva a pasar:
-
-```
+npx --no -- commitlint --edit $1
+module.exports = { extends: ['@commitlint/config-conventional'] };
 .husky/* text eol=lf
 ```
 
-**Verificación:**
+**Prueba que los hooks funcionan:**
 
-1. `git commit --allow-empty -m "mensaje malo"` debe fallar.
-2. `git commit --allow-empty -m "chore: test hooks"` debe pasar. Deshazlo con `git reset --soft HEAD~1`.
+```
+git commit --allow-empty -m "mensaje malo"
+```
+
+Debe **fallar** con un error de commitlint (por ejemplo `subject may not be empty`). Si crea el commit, `commit-msg` o `commitlint.config.js` están mal.
+
+```
+git commit --allow-empty -m "chore: test hooks"
+```
+
+Debe **pasar** (corre el lint y crea el commit). Luego deshaz ese commit de prueba:
+
+```
+git reset --soft HEAD~1
+```
 
 ### Paso 2.7: permite versionar el archivo de ejemplo de entorno
 
-Next.js ignora todos los archivos `.env*`. Agrega esta línea al final de `.gitignore` para poder publicar `.env.example`:
+Next.js ignora todos los archivos `.env*`. Para poder publicar `.env.example`, agrega esta línea al final de `.gitignore`:
+
+> 📝 **ARCHIVO EXISTENTE (modificar):** `.gitignore`
+> 1. Ábrelo con `Ctrl+P`, escribe `.gitignore` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
 
 ```
 !.env.example
@@ -255,7 +398,7 @@ En GitHub abre el repo, **Add file > Create new file**, llama al archivo `LICENS
 
 Cada issue lleva sus criterios de aceptación. Ejecuta estos comandos uno a uno:
 
-```bash
+```bat
 gh issue create --title "chore: scaffold, lint and test tooling" --body "Acceptance: npm run lint, typecheck and test pass; hooks enforce Conventional Commits."
 gh issue create --title "feat: authentication with roles" --body "Acceptance: login works; an OWNER gets 403 on admin routes; login attempts are rate limited."
 gh issue create --title "feat: clients and invoices with RUT validation" --body "Acceptance: invalid RUT and non-integer amounts are rejected."
@@ -272,39 +415,113 @@ gh issue create --title "docs: README, ADR and diagram" --body "Acceptance: an o
 
 ### Paso 2.10: crea el tablero Kanban
 
-1. En el repo, abre la pestaña **Projects** y elige **New project**, plantilla **Board**.
-2. Nómbralo `ConciliaPyme`.
-3. Usa las columnas `Backlog`, `In progress` y `Done`.
-4. Agrega los 10 issues con **Add item**.
+Un tablero Kanban muestra tus issues en columnas (por hacer, en curso, hecho). Se crea con GitHub CLI, así que primero hay que darle permiso para manejar proyectos.
 
-Mueve cada issue a `In progress` cuando abras su rama y a `Done` cuando se haga merge.
+**1. Concede el permiso** (una sola vez; se abre el navegador para autorizar):
+
+```
+gh auth refresh -s project
+```
+
+**2. Crea el proyecto.** Cambia `<tu-usuario>` por tu usuario de GitHub, sin los signos `<>`:
+
+```
+gh project create --owner <tu-usuario> --title "ConciliaPyme"
+```
+
+Al terminar imprime una dirección parecida a `https://github.com/users/<tu-usuario>/projects/2`. **El número del final (aquí 2) es el número del proyecto**; en los siguientes comandos se escribe `2` donde esta guía diga `<N>` (sin `<>`).
+
+**3. Vincúlalo al repositorio:**
+
+```
+gh project link <N> --owner <tu-usuario> --repo <tu-usuario>/conciliapyme
+```
+
+Ejemplo con valores reales: `gh project link 2 --owner JPozoAravena --repo JPozoAravena/conciliapyme`. No uses `@me` en este comando: no lo acepta.
+
+**4. Agrega los 10 issues** (un solo comando, repite sin tu intervención del 1 al 10):
+
+```
+for /L %i in (1,1,10) do gh project item-add <N> --owner <tu-usuario> --url https://github.com/<tu-usuario>/conciliapyme/issues/%i
+```
+
+**5. Verifica:**
+
+```
+gh project item-list <N> --owner <tu-usuario>
+```
+
+Debe listar los 10 issues.
+
+**Alternativa por la web:** entra a `github.com/<tu-usuario>?tab=projects`, elige **New project**, plantilla **Board**, nómbralo `ConciliaPyme` y usa **Add item** para agregar los 10 issues. Los proyectos de GitHub viven en tu cuenta, no dentro del repositorio.
+
+La plantilla Board trae las columnas `Todo`, `In Progress` y `Done`: déjalas así. Mueve cada issue a `In Progress` cuando abras su rama y a `Done` cuando se haga merge.
 
 ### Paso 2.11: primer PR (issue 1)
 
-```bash
+Cada cambio va en una rama, se sube, se abre un pull request (PR) y se mergea. Ejecuta **un comando por vez**:
+
+```
 git switch -c chore/1-scaffold
+```
+```
 git add -A
+```
+```
 git commit -m "chore: add prettier, vitest, commitlint and husky"
+```
+
+Si el `commit` falla, es el hook: lee el error. Normalmente es `npm run lint` con un aviso de ESLint; pégalo para ayuda.
+
+```
 git push -u origin HEAD
-gh pr create --fill --body "Closes #1"
+```
+```
+gh pr create --fill --body "Closes #1" --head chore/1-scaffold --base main
 ```
 
-Revisa el diff en GitHub y haz el merge:
+El último comando imprime la dirección del PR (por ejemplo `.../pull/11`). **El número del PR no es el del issue**: los 10 issues ocupan los números 1 a 10 y el primer PR sale con el 11. Abre esa dirección en el navegador y revisa la pestaña **Files changed**.
 
-```bash
-gh pr merge --squash --delete-branch
-git switch main && git pull
+Cuando el diff te parezca bien, mergea (una línea por vez):
+
+```
+gh pr merge chore/1-scaffold --squash --delete-branch
+```
+```
+git switch main
+```
+```
+git pull
 ```
 
-**Verificación:** el issue 1 aparece cerrado y `main` contiene los cambios.
+**Verificación:** `gh issue view 1` debe decir `CLOSED`. GitHub tarda unos segundos en cerrarlo; si pasa más de un minuto, ciérralo a mano con `gh issue close 1 --comment "Done in #11"`.
 
 ### Paso 2.12: protege la rama principal
 
-En **Settings > Branches** (o **Rules > Rulesets**, según la interfaz actual), crea una regla para `main` que exija pull request y bloquee los force push. Cuando exista el pipeline (sesión 2), agrega también el requisito de que el CI pase.
+Esto impide que alguien (incluido tú) suba cambios directo a `main` o la borre. Es una configuración en la web de GitHub:
+
+1. Abre tu repositorio en GitHub y entra a **Settings** (pestaña de arriba a la derecha).
+2. En el menú izquierdo: **Rules > Rulesets**, luego **New ruleset > New branch ruleset**.
+3. **Ruleset Name:** `protect-main`. **Enforcement status:** `Active`.
+4. En **Target branches** elige **Add target > Include default branch**.
+5. En **Rules** marca: **Restrict deletions**, **Block force pushes** y **Require a pull request before merging**. Deja en 0 la cantidad de aprobaciones requeridas (trabajas solo).
+6. Pulsa **Create**.
+
+Más adelante (paso 3.11) volverás aquí para exigir que el CI pase.
+
+**Verificación:** intenta `git push origin main` desde `main` con un cambio cualquiera: debe ser rechazado. Si no tienes cambios, no hace falta probarlo.
 
 ### Paso 2.13: activa las revisiones de seguridad
 
-En **Settings > Code security**, activa las alertas de Dependabot, el escaneo de secretos con *push protection* y CodeQL en modo por defecto. Según lo que conozco son gratuitos en repositorios públicos; confírmalo en esa pantalla.
+Activa las protecciones de seguridad, gratuitas en repositorios públicos:
+
+1. En el repositorio: **Settings > Code security** (en algunas cuentas se llama **Advanced Security**).
+2. Activa **Dependency graph**.
+3. Activa **Dependabot alerts**.
+4. Activa **Secret scanning** y, dentro de él, **Push protection** (bloquea que subas claves por error).
+5. En **Code scanning**, elige **Set up > Default** (CodeQL) y confirma.
+
+Si alguna opción te pide pagar, no la actives y sigue: las demás son suficientes.
 
 **Punto de control de la sesión 1:** issue 1 cerrado, tablero con 9 issues pendientes, rama `main` protegida, hooks funcionando y seguridad activada.
 
@@ -314,7 +531,26 @@ Al terminar tendrás PostgreSQL y MongoDB corriendo en Docker, el esquema migrad
 
 ### Paso 3.1: levanta las bases de datos locales
 
-Crea la rama `chore/db-foundation` (`git switch -c chore/db-foundation`) y el archivo `docker-compose.yml`:
+Antes de empezar, abre **Docker Desktop** y espera a que diga **Engine running**. Si no, los comandos de Docker darán errores como `error during connect ... dockerDesktopLinuxEngine`.
+
+Crea la rama de trabajo:
+
+```
+git switch main
+```
+```
+git pull
+```
+```
+git switch -c chore/db-foundation
+```
+
+Crea el archivo `docker-compose.yml`:
+
+> 📄 **ARCHIVO NUEVO:** `docker-compose.yml`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `docker-compose.yml` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```yaml
 services:
@@ -337,19 +573,36 @@ volumes:
 
 Crea `.env.example` (este sí se versiona):
 
+> 📄 **ARCHIVO NUEVO:** `.env.example`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `.env.example` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```
 DATABASE_URL=postgresql://conciliapyme:conciliapyme@localhost:5432/conciliapyme
 MONGODB_URI=mongodb://localhost:27017/conciliapyme
-AUTH_SECRET=replace-with-output-of-openssl-rand-base64-32
+AUTH_SECRET=replace-with-a-random-string
 ```
 
-Luego crea tu `.env` real y levanta los servicios:
+Luego crea tu `.env` real: es una copia de `.env.example` que **no se sube a git** y guarda tus secretos locales. **Hazlo una sola vez**: si repites el comando, sobrescribes tu `.env` y pierdes el secreto.
 
-```bash
-cp .env.example .env
-openssl rand -base64 32   # pega el resultado como AUTH_SECRET en .env
+```
+copy .env.example .env
+```
+
+Genera un secreto aleatorio:
+
+```
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Copia el texto que imprime, abre `.env` en VS Code (`Ctrl+P`, escribe `.env`) y reemplaza el valor de `AUTH_SECRET` por ese texto. Guarda con `Ctrl+S`. Luego levanta las bases de datos:
+
+```
 docker compose up -d
 ```
+
+La primera vez descarga las imágenes y puede tardar unos minutos.
 
 **Verificación:**
 
@@ -362,15 +615,19 @@ Las credenciales de este archivo son solo para desarrollo local; en Neon y Atlas
 
 ### Paso 3.2: instala Prisma y las dependencias de datos
 
-```bash
-npm i @prisma/client mongoose zod
-npm i -D prisma
+```bat
+npm i @prisma/client@6 mongoose zod
+npm i -D prisma@6
 npx prisma init --datasource-provider postgresql
 ```
 
 Prisma crea `prisma/schema.prisma`. **Verifica que tu `.env` siga teniendo las tres variables**; si `prisma init` lo reescribió, restaura el contenido desde `.env.example`.
 
-Agrega este script en `package.json` para que el cliente de Prisma se genere al instalar (lo necesitarán el CI y Vercel):
+Abre `package.json` y agrega esta línea **dentro** del bloque `"scripts": { ... }` (con una coma al final de la línea anterior), para que el cliente de Prisma se genere al instalar (lo necesitarán el CI y Vercel):
+
+> 📝 **ARCHIVO EXISTENTE (modificar):** `package.json`
+> 1. Ábrelo con `Ctrl+P`, escribe `package.json` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
 
 ```json
 "postinstall": "prisma generate"
@@ -380,7 +637,11 @@ Agrega este script en `package.json` para que el cliente de Prisma se genere al 
 
 ### Paso 3.3: define el esquema
 
-Reemplaza `prisma/schema.prisma` por:
+El comando anterior (`npx prisma init`) creó la carpeta `prisma` en la raíz del proyecto, con el archivo `schema.prisma` adentro. Ábrelo y reemplaza todo el contenido de `prisma/schema.prisma` por:
+
+> 📝 **ARCHIVO EXISTENTE (reemplazar todo):** `prisma/schema.prisma`
+> 1. Ábrelo con `Ctrl+P`, escribe `prisma/schema.prisma` y Enter.
+> 2. `Ctrl+A` para seleccionar todo, pega el código de abajo y guarda con `Ctrl+S`.
 
 ```prisma
 generator client {
@@ -468,7 +729,7 @@ Decisiones que conviene explicar en el ADR: los montos son `Int` en pesos (sin d
 
 ### Paso 3.4: crea la migración
 
-```bash
+```bat
 npx prisma migrate dev --name init
 ```
 
@@ -477,6 +738,11 @@ npx prisma migrate dev --name init
 ### Paso 3.5: conexiones a las bases
 
 `src/lib/db.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/db.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/db.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { PrismaClient } from '@prisma/client';
@@ -489,6 +755,11 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 ```
 
 `src/lib/mongo.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/mongo.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/mongo.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import mongoose from 'mongoose';
@@ -510,6 +781,11 @@ El objeto global evita abrir una conexión nueva en cada recarga en desarrollo.
 ### Paso 3.6: endpoint de salud
 
 `src/app/api/health/route.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/api/health/route.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/api/health/route.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -538,7 +814,7 @@ export async function GET() {
 4. Si el proyecto tiene activado el *análisis automático*, desactívalo en **Administration > Analysis Method**, porque no puede convivir con el análisis desde el CI.
 5. Guarda el token como secreto del repositorio:
 
-```bash
+```bat
 gh secret set SONAR_TOKEN
 ```
 
@@ -547,6 +823,11 @@ Pega el token cuando lo pida. **Verificación:** `gh secret list` muestra `SONAR
 ### Paso 3.8: configuración de Sonar
 
 `sonar-project.properties` (reemplaza los valores entre `<>` por los que te mostró SonarQube Cloud):
+
+> 📄 **ARCHIVO NUEVO:** `sonar-project.properties`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `sonar-project.properties` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```
 sonar.projectKey=<tu-org>_conciliapyme
@@ -562,6 +843,11 @@ La cobertura se exige sobre la lógica (`src/lib`), no sobre las páginas de la 
 ### Paso 3.9: el pipeline
 
 `.github/workflows/ci.yml`:
+
+> 📄 **ARCHIVO NUEVO:** `.github/workflows/ci.yml`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `.github/workflows/ci.yml` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```yaml
 name: CI
@@ -621,11 +907,11 @@ jobs:
 
 ### Paso 3.10: primer PR del pipeline
 
-```bash
+```bat
 git add -A
 git commit -m "ci: add database foundation, health endpoint and sonar pipeline"
 git push -u origin HEAD
-gh pr create --fill --body "Closes #8. Refs #3."
+gh pr create --fill --body "Closes #8"
 ```
 
 **Verificación:**
@@ -650,12 +936,17 @@ Al terminar tendrás un validador de RUT probado, permisos por rol, login con tr
 
 Empieza por la lógica pura: es la que Sonar medirá y la más fácil de probar. Crea la rama:
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/3-rut-validator
 ```
 
 Primero la prueba, en `tests/rut.test.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `tests/rut.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/rut.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -692,6 +983,11 @@ describe('normalizarRut', () => {
 
 Ejecuta `npm test`: debe **fallar** porque `@/lib/rut` aún no existe. Ese fallo es la señal de que la prueba realmente prueba algo. Ahora `src/lib/rut.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/lib/rut.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/rut.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 function limpiar(input: string): string {
   return input.replace(/[.\-\s]/g, '').toUpperCase();
@@ -725,6 +1021,11 @@ export function normalizarRut(input: string): string {
 
 `src/lib/schemas.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/lib/schemas.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/schemas.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import { z } from 'zod';
 import { validarRut } from '@/lib/rut';
@@ -750,24 +1051,48 @@ export const facturaSchema = z
 
 Escribe `tests/schemas.test.ts` con al menos cuatro casos: cliente válido, RUT inválido, monto con decimales (debe fallar porque el CLP es entero) y vencimiento anterior a la emisión. Haz commit de todo:
 
-```bash
+> 📄 **ARCHIVO NUEVO:** `tests/schemas.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/schemas.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
+```bat
 git add -A
 git commit -m "feat(clientes): add RUT validator and zod schemas"
 ```
 
 ### Paso 4.3: permisos por rol y límite de intentos
 
-Crea la rama de autenticación (puedes apilarla sobre la anterior si el PR de RUT aún no se mergea, o abrir antes ese PR; lo más limpio es mergear primero):
+Primero termina lo anterior: sube la rama del validador, abre su PR y mergéalo (una línea por vez):
 
-```bash
+```
 git push -u origin HEAD
+```
+```
 gh pr create --fill --body "Refs #3. Pure validation logic first; CRUD comes in the next PR."
-gh pr merge --squash --delete-branch   # cuando el CI esté verde
-git switch main && git pull
+```
+
+Abre la dirección del PR en el navegador y **espera a que el CI quede en verde** (pestaña **Checks**). Luego:
+
+```
+gh pr merge feat/3-rut-validator --squash --delete-branch
+```
+```
+git switch main
+```
+```
+git pull
+```
+```
 git switch -c feat/2-auth-roles
 ```
 
 `src/lib/rbac.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/rbac.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/rbac.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 export type Role = 'CONTADOR' | 'DUENO' | 'ADMIN';
@@ -787,6 +1112,11 @@ export function puede(role: Role, accion: Accion): boolean {
 ```
 
 `src/lib/rate-limit.ts` (en memoria; en la semana 2 lo reemplazarás por Redis):
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/rate-limit.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/rate-limit.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 const intentos = new Map<string, { count: number; reset: number }>();
@@ -809,13 +1139,18 @@ Escribe `tests/rbac.test.ts` (el DUEÑO no puede confirmar conciliaciones; el CO
 
 ### Paso 4.4: Auth.js con credenciales
 
-```bash
+```bat
 npm i next-auth@beta bcryptjs
 ```
 
 bcryptjs 3 trae sus propios tipos; si instalaste la versión 2, agrega `@types/bcryptjs` como dependencia de desarrollo. Auth.js v5 lee `AUTH_SECRET` del entorno automáticamente.
 
 `src/auth.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/auth.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/auth.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import NextAuth from 'next-auth';
@@ -867,6 +1202,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 `src/types/next-auth.d.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/types/next-auth.d.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/types/next-auth.d.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import type { DefaultSession } from 'next-auth';
 import type { Role } from '@/lib/rbac';
@@ -883,6 +1223,11 @@ declare module 'next-auth' {
 
 `src/app/api/auth/[...nextauth]/route.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/app/api/auth/[...nextauth]/route.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/api/auth/[...nextauth]/route.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import { handlers } from '@/auth';
 
@@ -895,11 +1240,16 @@ La autorización se verifica **en el servidor, dentro de cada página y acción*
 
 ### Paso 4.5: usuarios y datos de demostración
 
-```bash
+```bat
 npm i -D tsx
 ```
 
 `prisma/seed.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `prisma/seed.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `prisma/seed.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { PrismaClient, Role } from '@prisma/client';
@@ -955,13 +1305,17 @@ async function main() {
 main().finally(() => prisma.$disconnect());
 ```
 
-Regístralo en `package.json` y ejecútalo:
+Regístralo en `package.json`: agrega esta clave nueva al nivel principal del archivo, **fuera** de `scripts` (por ejemplo justo después del bloque `"scripts"`, con coma al final del bloque anterior). Luego ejecútalo:
+
+> 📝 **ARCHIVO EXISTENTE (modificar):** `package.json`
+> 1. Ábrelo con `Ctrl+P`, escribe `package.json` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
 
 ```json
 "prisma": { "seed": "tsx prisma/seed.ts" }
 ```
 
-```bash
+```bat
 npx prisma db seed
 ```
 
@@ -972,6 +1326,11 @@ En Prisma 7 la configuración del seed se mueve a `prisma.config.ts`; si es tu c
 ### Paso 4.6: página de login y página protegida
 
 `src/app/login/page.tsx`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/login/page.tsx`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/login/page.tsx` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```tsx
 import { AuthError } from 'next-auth';
@@ -1019,6 +1378,10 @@ El mensaje de error es genérico a propósito: no revela si el correo existe. La
 
 `src/app/page.tsx`:
 
+> 📝 **ARCHIVO EXISTENTE (reemplazar todo):** `src/app/page.tsx`
+> 1. Ábrelo con `Ctrl+P`, escribe `app/page.tsx` y Enter.
+> 2. `Ctrl+A` para seleccionar todo, pega el código de abajo y guarda con `Ctrl+S`.
+
 ```tsx
 import { redirect } from 'next/navigation';
 import { auth, signOut } from '@/auth';
@@ -1060,7 +1423,7 @@ Antes de abrir el PR, pide una revisión independiente en Claude Code. Usa un ag
 
 Corrige lo que tenga sentido y anota en la descripción del PR qué hallazgos aceptaste y cuáles descartaste (esto alimenta tu sección «AI usage» del README).
 
-```bash
+```bat
 git add -A
 git commit -m "feat(auth): add credentials login, roles and rate limiting"
 git push -u origin HEAD
@@ -1071,12 +1434,17 @@ Cuando el CI y Sonar estén en verde: `gh pr merge --squash --delete-branch`.
 
 ### Paso 4.8: CRUD de clientes con permisos
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/3-clientes
 ```
 
 `src/app/clientes/actions.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/clientes/actions.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/clientes/actions.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 'use server';
@@ -1115,6 +1483,11 @@ export async function crearCliente(
 
 `src/app/clientes/cliente-form.tsx`:
 
+> 📄 **ARCHIVO NUEVO:** `src/app/clientes/cliente-form.tsx`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/clientes/cliente-form.tsx` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```tsx
 'use client';
 
@@ -1145,6 +1518,11 @@ export function ClienteForm() {
 ```
 
 `src/app/clientes/page.tsx`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/clientes/page.tsx`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/clientes/page.tsx` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```tsx
 import { redirect } from 'next/navigation';
@@ -1187,7 +1565,7 @@ Las facturas siguen exactamente el mismo patrón. Pídele a Claude Code, con tu 
 
 Revisa el resultado tú mismo: ¿verifica sesión y rol?, ¿el monto se formatea sin decimales?, ¿el folio duplicado da un mensaje claro? Luego pasa el auditor igual que en el paso 4.7.
 
-```bash
+```bat
 git add -A
 git commit -m "feat(clientes): add client and invoice management with role checks"
 git push -u origin HEAD
@@ -1204,7 +1582,7 @@ Es la sesión con más valor de portafolio: aquí demuestras manejo de datos suc
 
 ### Paso 5.1: rama y dependencias
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/4-cartola-import
 npm i papaparse
@@ -1220,6 +1598,11 @@ Antes de programar, define el contrato con estas dos reglas, que irán al ADR:
 
 Crea `tests/fixtures/banco-a.csv` (separador punto y coma, miles con punto, cargos y abonos en columnas separadas):
 
+> 📄 **ARCHIVO NUEVO:** `tests/fixtures/banco-a.csv`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/fixtures/banco-a.csv` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```
 Fecha;Descripción;Cargo;Abono;Saldo
 02/09/2026;TRANSF DE 76000000-0 FAC 1001;;1.190.000;5.400.000
@@ -1229,6 +1612,11 @@ Fecha;Descripción;Cargo;Abono;Saldo
 
 Y `tests/fixtures/banco-b.csv` (coma, fecha ISO, monto con signo, columna de referencia):
 
+> 📄 **ARCHIVO NUEVO:** `tests/fixtures/banco-b.csv`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/fixtures/banco-b.csv` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```
 date,detail,amount,reference
 2026-09-05,Transferencia recibida,595000,FAC 1003
@@ -1236,6 +1624,11 @@ date,detail,amount,reference
 ```
 
 Escribe `tests/cartola.test.ts` antes del código:
+
+> 📄 **ARCHIVO NUEVO:** `tests/cartola.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/cartola.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -1287,6 +1680,11 @@ describe('parseCartola', () => {
 ```
 
 Ejecuta `npm test`: debe fallar. Ahora `src/lib/cartola/parse.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/cartola/parse.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/cartola/parse.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import Papa from 'papaparse';
@@ -1385,6 +1783,11 @@ Dos decisiones que conviene explicar en el ADR: se rechaza **todo** el archivo a
 
 `src/lib/cartola/hash.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/lib/cartola/hash.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/cartola/hash.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import { createHash } from 'node:crypto';
 import type { LineaCartola } from './parse';
@@ -1408,6 +1811,11 @@ Agrega a `tests/cartola.test.ts` dos pruebas: el mismo contenido produce los mis
 ### Paso 5.4: modelos de MongoDB
 
 `src/models/cartola.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/models/cartola.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/models/cartola.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import mongoose, { Schema } from 'mongoose';
@@ -1441,6 +1849,11 @@ Por qué MongoDB aquí: cada banco entrega columnas distintas, así que la líne
 ### Paso 5.5: servicio de importación
 
 `src/lib/cartola/importar.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/cartola/importar.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/cartola/importar.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { prisma } from '@/lib/db';
@@ -1525,6 +1938,10 @@ Esta compensación manual es justamente lo que un entrevistador quiere que sepas
 
 Vitest no carga `.env` por sí solo. En `vitest.config.ts` agrega el import y la opción `env` dentro de `test`:
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `vitest.config.ts`
+> 1. Ábrelo con `Ctrl+P`, escribe `vitest.config.ts` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```ts
 import { loadEnv } from 'vite';
 // dentro de defineConfig({ test: { ... } }):
@@ -1532,6 +1949,11 @@ import { loadEnv } from 'vite';
 ```
 
 En el CI las variables ya existen y esto no cambia nada. Crea `tests/integration/importar.test.ts`. Para no borrar tus datos de desarrollo, cada prueba genera contenido único y limpia solo lo que creó:
+
+> 📄 **ARCHIVO NUEVO:** `tests/integration/importar.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/integration/importar.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { randomUUID } from 'node:crypto';
@@ -1597,6 +2019,11 @@ describe('importarCartola', () => {
 
 `src/app/importar/actions.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/app/importar/actions.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/importar/actions.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 'use server';
 
@@ -1656,7 +2083,7 @@ Crea `src/app/importar/importar-form.tsx` copiando el patrón de `ClienteForm` (
 
 ### Paso 5.8: primer PR de la sesión
 
-```bash
+```bat
 git add -A
 git commit -m "feat(import): add idempotent bank statement import with postgres and mongo"
 git push -u origin HEAD
@@ -1667,7 +2094,7 @@ Pide al subagente auditor que revise el diff buscando: archivos grandes sin lím
 
 ### Paso 5.9: reglas de sugerencia, pruebas primero
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/5-suggestions
 ```
@@ -1679,6 +2106,11 @@ La lógica es una función pura: recibe un movimiento y las facturas pendientes,
 - **40**: diferencia menor (hasta el 1 % o $1.000, lo que sea mayor) y, además, folio o fecha cercana. Sin esa segunda señal, cualquier factura de monto parecido sería candidata.
 
 Escribe primero `tests/sugerir.test.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `tests/sugerir.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/sugerir.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -1740,6 +2172,11 @@ describe('sugerir', () => {
 ```
 
 Con `npm test` verás el fallo esperado. Ahora `src/lib/conciliacion/sugerir.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/conciliacion/sugerir.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/conciliacion/sugerir.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 export type Movimiento = {
@@ -1813,12 +2250,22 @@ export function sugerir(mov: Movimiento, facturas: FacturaPendiente[], max = 3):
 
 Crea `src/lib/format.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `src/lib/format.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/format.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 export const formatClp = (n: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 ```
 
 Y `src/app/conciliacion/page.tsx`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/conciliacion/page.tsx`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/conciliacion/page.tsx` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```tsx
 import { redirect } from 'next/navigation';
@@ -1888,7 +2335,7 @@ El puntaje y la regla se muestran como texto, no solo con color, para que la inf
 
 ### Paso 5.11: segundo PR de la sesión
 
-```bash
+```bat
 git add -A
 git commit -m "feat(conciliacion): add scored match suggestions and read-only screen"
 git push -u origin HEAD
@@ -1905,12 +2352,17 @@ Aquí está el corazón técnico del proyecto: una operación que toca varias fi
 
 ### Paso 6.1: modelo y servicio de auditoría
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/7-audit-log
 ```
 
 `src/models/auditoria.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/models/auditoria.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/models/auditoria.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import mongoose, { Schema } from 'mongoose';
@@ -1930,6 +2382,11 @@ export const Auditoria =
 ```
 
 `src/lib/auditoria.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/auditoria.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/auditoria.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { connectMongo } from '@/lib/mongo';
@@ -1964,6 +2421,10 @@ Dos decisiones para el ADR:
 
 En `src/app/clientes/actions.ts`, importa `registrarAuditoria` y reemplaza el bloque `try/catch` de creación por:
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `src/app/clientes/actions.ts`
+> 1. Ábrelo con `Ctrl+P`, escribe `clientes/actions.ts` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```ts
   let creado;
   try {
@@ -1987,6 +2448,10 @@ En `src/app/clientes/actions.ts`, importa `registrarAuditoria` y reemplaza el bl
 
 En `src/app/importar/actions.ts`, justo antes del `return` que informa los movimientos nuevos, agrega:
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `src/app/importar/actions.ts`
+> 1. Ábrelo con `Ctrl+P`, escribe `importar/actions.ts` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```ts
     await registrarAuditoria({
       userId: session.user.id,
@@ -2002,6 +2467,11 @@ Si creaste la acción de facturas con Claude Code, agrega allí `FACTURA_CREADA`
 ### Paso 6.3: pantalla de auditoría para el dueño
 
 `src/app/auditoria/page.tsx`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/auditoria/page.tsx`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/auditoria/page.tsx` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```tsx
 import { redirect } from 'next/navigation';
@@ -2063,6 +2533,11 @@ Agrega una barra de navegación mínima en `src/app/layout.tsx` con enlaces a Cl
 
 Crea `tests/integration/auditoria.test.ts`:
 
+> 📄 **ARCHIVO NUEVO:** `tests/integration/auditoria.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/integration/auditoria.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```ts
 import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
@@ -2095,7 +2570,7 @@ it('guarda el evento con fecha y datos antes/después', async () => {
 
 Agrega también una prueba unitaria en `tests/rbac.test.ts`: el dueño y el administrador pueden `auditoria:ver`; el contador no.
 
-```bash
+```bat
 git add -A
 git commit -m "feat(audit): add append-only audit log and owner view"
 git push -u origin HEAD
@@ -2106,7 +2581,7 @@ gh pr create --fill --body "Closes #7."
 
 ### Paso 6.5: servicio de confirmación atómica
 
-```bash
+```bat
 git switch main && git pull
 git switch -c feat/6-confirm-reconciliation
 ```
@@ -2114,6 +2589,11 @@ git switch -c feat/6-confirm-reconciliation
 La regla de negocio: confirmar una conciliación marca el movimiento como conciliado, cambia el estado de la factura y crea el registro de conciliación. Las tres cosas, o ninguna. Además, dos personas confirmando a la vez el mismo movimiento no deben poder ganar las dos.
 
 `src/lib/conciliacion/confirmar.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/lib/conciliacion/confirmar.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/lib/conciliacion/confirmar.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { FacturaEstado } from '@prisma/client';
@@ -2187,6 +2667,11 @@ Observa tres detalles que vale la pena contar en una entrevista: la regla se **r
 ### Paso 6.6: pruebas de integración, incluida la concurrencia
 
 `tests/integration/conciliacion.test.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `tests/integration/conciliacion.test.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `tests/integration/conciliacion.test.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { randomUUID } from 'node:crypto';
@@ -2318,6 +2803,10 @@ La cuarta prueba es la que demuestra la atomicidad: el primer `updateMany` sí t
 
 Agrega a `src/lib/schemas.ts`:
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `src/lib/schemas.ts`
+> 1. Ábrelo con `Ctrl+P`, escribe `lib/schemas.ts` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```ts
 export const confirmarSchema = z.object({
   movimientoId: z.string().min(1),
@@ -2326,6 +2815,11 @@ export const confirmarSchema = z.object({
 ```
 
 Y `src/app/conciliacion/actions.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `src/app/conciliacion/actions.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `src/app/conciliacion/actions.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 'use server';
@@ -2366,7 +2860,7 @@ Los errores viajan como **códigos fijos** en la URL y la página los traduce a 
 
 ### Paso 6.8: botón de confirmar en la pantalla
 
-En `src/app/conciliacion/page.tsx` haz tres cambios.
+Abre `src/app/conciliacion/page.tsx` (hay varios archivos `page.tsx` en el proyecto: con `Ctrl+P` escribe `conciliacion/page.tsx`) y haz tres cambios.
 
 1. Importa `puede` desde `@/lib/rbac` y `confirmarAction` desde `./actions`, y agrega antes del componente:
 
@@ -2438,7 +2932,7 @@ El `aria-label` distingue los botones entre sí para quien usa lector de pantall
 
 Pide al subagente auditor que revise específicamente la transacción: ¿hay algún camino donde se pueda confirmar un movimiento ya conciliado?, ¿se puede confirmar con un rol sin permiso saltándose la interfaz?, ¿los mensajes de error revelan algo interno? Registra qué aceptaste y qué descartaste.
 
-```bash
+```bat
 git add -A
 git commit -m "feat(conciliacion): add atomic confirmation with concurrency guard"
 git push -u origin HEAD
@@ -2453,7 +2947,7 @@ Al terminar, cualquiera podrá levantar todo el proyecto con un comando, el CI e
 
 ### Paso 7.1: rama
 
-```bash
+```bat
 git switch main && git pull
 git switch -c chore/9-docker-e2e
 ```
@@ -2461,6 +2955,10 @@ git switch -c chore/9-docker-e2e
 ### Paso 7.2: imagen de Docker en varias etapas
 
 El modo `standalone` de Next.js genera un servidor mínimo para producción, pero lo activaremos solo al construir la imagen: `next start` no es compatible con ese modo y lo necesitamos en el CI y en Vercel. Reemplaza `next.config.ts`:
+
+> 📝 **ARCHIVO EXISTENTE (reemplazar todo):** `next.config.ts`
+> 1. Ábrelo con `Ctrl+P`, escribe `next.config.ts` y Enter.
+> 2. `Ctrl+A` para seleccionar todo, pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import type { NextConfig } from 'next';
@@ -2473,6 +2971,11 @@ export default nextConfig;
 ```
 
 Crea `.dockerignore`:
+
+> 📄 **ARCHIVO NUEVO:** `.dockerignore`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `.dockerignore` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```
 node_modules
@@ -2488,7 +2991,12 @@ playwright-report
 test-results
 ```
 
-Y `Dockerfile` (usa la misma versión mayor de Node que tu `.nvmrc`):
+Y el archivo `Dockerfile` (en la raíz del proyecto, sin extensión; usa la misma versión mayor de Node que indica tu `.nvmrc`). Contenido de `Dockerfile`:
+
+> 📄 **ARCHIVO NUEVO:** `Dockerfile`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `Dockerfile` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```dockerfile
 FROM node:22-bookworm-slim AS deps
@@ -2525,6 +3033,10 @@ Por qué tres etapas: la imagen final solo contiene el servidor ya compilado y c
 
 Agrega este servicio a `docker-compose.yml` (queda bajo un *profile* para que `docker compose up -d` siga levantando solo las bases cuando desarrollas):
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `docker-compose.yml`
+> 1. Ábrelo con `Ctrl+P`, escribe `docker-compose.yml` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```yaml
   app:
     profiles: ['app']
@@ -2540,7 +3052,7 @@ Agrega este servicio a `docker-compose.yml` (queda bajo un *profile* para que `d
 
 Las migraciones y el seed se ejecutan desde tu equipo contra el puerto publicado de PostgreSQL:
 
-```bash
+```bat
 docker compose up -d postgres mongo
 npx prisma migrate deploy
 npx prisma db seed
@@ -2566,6 +3078,11 @@ Si `/login` responde pero al ingresar vuelve con error, revisa que `AUTH_SECRET`
 ### Paso 7.4: actualizaciones automáticas y análisis de seguridad
 
 `.github/dependabot.yml`:
+
+> 📄 **ARCHIVO NUEVO:** `.github/dependabot.yml`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `.github/dependabot.yml` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```yaml
 version: 2
@@ -2596,11 +3113,16 @@ Luego, en **Settings > Code security** del repositorio, activa **Code scanning**
 
 Si aún no descargaste el navegador:
 
-```bash
+```bat
 npx playwright install --with-deps chromium
 ```
 
 Crea `playwright.config.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `playwright.config.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `playwright.config.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
@@ -2634,6 +3156,11 @@ Los archivos E2E terminan en `.e2e.ts`, así Vitest no los toma por error como p
 ### Paso 7.6: la prueba del flujo completo
 
 Un buen E2E no depende del orden ni del estado de la base. Esta prueba crea su propia factura con un folio aleatorio, arma la cartola en memoria con ese folio y recorre el flujo. Crea `e2e/conciliacion.e2e.ts`:
+
+> 📄 **ARCHIVO NUEVO:** `e2e/conciliacion.e2e.ts`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `e2e/conciliacion.e2e.ts` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```ts
 import { expect, test, type Page } from '@playwright/test';
@@ -2729,6 +3256,10 @@ Puedes pedirle a Claude Code que escriba este archivo a partir de la descripció
 
 En `.github/workflows/ci.yml` agrega `AUTH_TRUST_HOST: 'true'` al bloque `env` del job, y reemplaza los pasos desde `npm run lint` hasta el final por:
 
+> 📝 **ARCHIVO EXISTENTE (modificar):** `.github/workflows/ci.yml`
+> 1. Ábrelo con `Ctrl+P`, escribe `workflows/ci.yml` y Enter.
+> 2. Haz **solo** el cambio que describe la frase de arriba (no borres el resto) y guarda con `Ctrl+S`.
+
 ```yaml
       - run: npm run lint
       - run: npm run typecheck
@@ -2768,7 +3299,7 @@ En la regla de la rama `main` agrega `docker` como verificación obligatoria. Si
 
 ### Paso 7.8: pull request y cierre
 
-```bash
+```bat
 git add -A
 git commit -m "chore: add dockerfile, compose app profile, dependabot and e2e tests"
 git push -u origin HEAD
@@ -2810,18 +3341,22 @@ Ya tienes un proyecto creado en Neon (región AWS US East 2, Ohio). Ve a **Conne
 - La **directa** (host sin `-pooler`): para migraciones.
 - La **con pooler** (host con `-pooler`): para la aplicación en Vercel, porque cada solicitud serverless abre su propia conexión.
 
-Aplica el esquema y el seed contra Neon desde tu equipo, pasando la variable solo para ese comando. En macOS o Linux:
+Aplica el esquema y el seed contra Neon desde tu equipo. En `cmd`, la variable se define con `set` (con las comillas, para que los símbolos de la cadena no se interpreten) y se borra al final:
 
-```bash
-DATABASE_URL='<cadena directa de Neon>' npx prisma migrate deploy
-DATABASE_URL='<cadena directa de Neon>' npx prisma db seed
+```
+set "DATABASE_URL=<cadena directa de Neon>"
+```
+```
+npx prisma migrate deploy
+```
+```
+npx prisma db seed
+```
+```
+set DATABASE_URL=
 ```
 
-En PowerShell:
-
-```powershell
-$env:DATABASE_URL='<cadena directa de Neon>'; npx prisma migrate deploy; npx prisma db seed; Remove-Item Env:DATABASE_URL
-```
+Reemplaza `<cadena directa de Neon>` por la cadena real, sin los signos `<>`.
 
 **Verificación:** en el panel de Neon, en **Tables**, aparecen `User`, `Cliente`, `Factura`, `MovimientoBancario` y `Conciliacion` con las filas del seed.
 
@@ -2836,12 +3371,21 @@ Si usas la cadena con pooler y las transacciones fallan con errores de sentencia
 3. En **Network Access**, agrega `0.0.0.0/0`. Vercel no tiene direcciones IP fijas en el plan gratuito, así que no hay otra opción; la defensa es la contraseña larga y un usuario con permisos solo sobre esta base. Dilo en el README, es una decisión consciente.
 4. En **Connect > Drivers** copia la cadena `mongodb+srv://...` y agrega el nombre de la base antes de los parámetros: `.../conciliapyme?retryWrites=true&w=majority`.
 
-**Verificación:** con la cadena en la mano, `MONGODB_URI='<cadena>' node -e "require('mongoose').connect(process.env.MONGODB_URI).then(()=>{console.log('ok');process.exit(0)}).catch(e=>{console.error(e.message);process.exit(1)})"` imprime `ok`. Si se queda colgado, casi siempre es el acceso de red del paso 3.
+**Verificación:** con la cadena en la mano, estos dos comandos, uno por vez, imprimen `ok` (reemplaza el valor por tu cadena real, sin `<>`, y mantén las comillas):
+
+```
+set "MONGODB_URI=<cadena>"
+```
+```
+node -e "require('mongoose').connect(process.env.MONGODB_URI).then(()=>{console.log('ok');process.exit(0)}).catch(e=>{console.error(e.message);process.exit(1)})"
+```
+
+Si imprime `ok`, sigue. Si se queda colgado, casi siempre es el acceso de red del paso 3.
 
 ### Paso 8.4: despliegue en Vercel
 
 1. En Vercel, **Add New > Project**, importa `conciliapyme` desde GitHub. Detecta Next.js solo.
-2. Antes de desplegar, agrega estas variables de entorno **solo en el ámbito Production**: `DATABASE_URL` (cadena con pooler de Neon), `MONGODB_URI` (Atlas) y `AUTH_SECRET` (uno nuevo: `openssl rand -base64 32`; nunca el de tu `.env` local).
+2. Antes de desplegar, agrega estas variables de entorno **solo en el ámbito Production**: `DATABASE_URL` (cadena con pooler de Neon), `MONGODB_URI` (Atlas) y `AUTH_SECRET` (uno nuevo, generado con `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; nunca el de tu `.env` local).
 3. Despliega. El `postinstall` ejecuta `prisma generate`, así que el cliente queda listo.
 
 **Verificación:**
@@ -2857,6 +3401,11 @@ Limitación honesta para el README: la demo es pública y las claves de demostra
 ### Paso 8.5: README en inglés
 
 El README es lo primero y a veces lo único que lee un reclutador. Crea `README.md` con esta estructura y completa lo que está entre `<>` con datos reales (no inventes métricas; copia las de tu CI y de Sonar):
+
+> 📄 **ARCHIVO NUEVO:** `README.md`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `README.md` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ````markdown
 # ConciliaPyme
@@ -2949,6 +3498,11 @@ Para el GIF de la demostración usa una herramienta gratuita de grabación de pa
 
 Crea `docs/adr/0001-postgres-and-mongo.md`:
 
+> 📄 **ARCHIVO NUEVO:** `docs/adr/0001-postgres-and-mongo.md`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `docs/adr/0001-postgres-and-mongo.md` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
+
 ```markdown
 # 1. PostgreSQL for business data, MongoDB for raw statements and audit log
 
@@ -2980,6 +3534,11 @@ Escribe también `0002-cross-database-consistency.md` (importación con compensa
 ### Paso 8.7: CLAUDE.md y la sección «AI usage»
 
 `CLAUDE.md` en la raíz le da contexto permanente a Claude Code y, de paso, muestra cómo trabajas:
+
+> 📄 **ARCHIVO NUEVO:** `CLAUDE.md`
+> 1. En **Explorer**, clic derecho en un espacio vacío (o sobre `conciliapyme`) → **New File**.
+> 2. Escribe exactamente `CLAUDE.md` y Enter (las carpetas que falten se crean solas).
+> 3. Pega el código de abajo y guarda con `Ctrl+S`.
 
 ```markdown
 # ConciliaPyme
@@ -3017,7 +3576,7 @@ Los «hallazgos de ejemplo» deben ser reales: copia dos de las revisiones de lo
 
 ### Paso 8.8: pulido del repositorio, publicación y post
 
-```bash
+```bat
 gh repo edit --description "Bank statement reconciliation for Chilean SMEs (Next.js, PostgreSQL, MongoDB)" --homepage "https://<tu-proyecto>.vercel.app"
 gh repo edit --add-topic nextjs --add-topic typescript --add-topic postgresql --add-topic mongodb --add-topic prisma --add-topic playwright --add-topic fintech
 gh release create v1.0.0 --generate-notes --title "v1.0.0"
@@ -3025,7 +3584,7 @@ gh release create v1.0.0 --generate-notes --title "v1.0.0"
 
 En tu perfil de GitHub, ancla (*pin*) este repositorio. Cierra el issue 10 desde el PR de documentación:
 
-```bash
+```bat
 git switch main && git pull
 git switch -c docs/10-readme-adr
 git add -A
@@ -3056,7 +3615,7 @@ Pon el enlace al repositorio y a la demo en el primer comentario, no en el cuerp
 - [ ] README en inglés con diagrama, GIF, usuarios de demostración y limitaciones
 - [ ] ADR 0001, 0002 y 0003 escritos
 - [ ] `CLAUDE.md` y sección «AI usage» con hallazgos reales
-- [ ] Ningún secreto en el historial: `git log -p | grep -i -E "(secret|password|mongodb\+srv)"` no muestra nada sensible
+- [ ] Ningún secreto en el historial: `git log -p | findstr /i "secret password mongodb+srv"` no muestra nada sensible
 - [ ] Publicación de LinkedIn escrita y programada
 
 Cuando termines, vuelve a este chat o espera el recordatorio del lunes: te preguntaré cómo te fue con la semana 1 y te entregaré la ficha completa de la semana 2.
