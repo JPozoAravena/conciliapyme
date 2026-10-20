@@ -12,12 +12,16 @@
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "mongoose": "^9.11.2",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -32,6 +36,7 @@
     "eslint-config-next": "16.4.2",
     "husky": "^9.1.7",
     "prettier": "^3.9.10",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.5"
