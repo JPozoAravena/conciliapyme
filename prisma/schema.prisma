@@ -1,15 +1,79 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CONTADOR
+  DUENO
+  ADMIN
+}
+
+enum FacturaEstado {
+  PENDIENTE
+  PAGADA
+  CON_DIFERENCIA
+}
+
+enum MovimientoEstado {
+  SIN_CONCILIAR
+  CONCILIADO
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  role           Role
+  createdAt      DateTime       @default(now())
+  conciliaciones Conciliacion[]
+}
+
+model Cliente {
+  id          String    @id @default(cuid())
+  rut         String    @unique
+  razonSocial String
+  facturas    Factura[]
+}
+
+model Factura {
+  id             String         @id @default(cuid())
+  folio          Int            @unique
+  clienteId      String
+  cliente        Cliente        @relation(fields: [clienteId], references: [id])
+  montoClp       Int
+  emision        DateTime
+  vencimiento    DateTime
+  estado         FacturaEstado  @default(PENDIENTE)
+  conciliaciones Conciliacion[]
+}
+
+model MovimientoBancario {
+  id           String            @id @default(cuid())
+  importId     String
+  banco        String
+  fecha        DateTime
+  montoClp     Int
+  descripcion  String
+  referencia   String?
+  lineHash     String            @unique
+  estado       MovimientoEstado  @default(SIN_CONCILIAR)
+  conciliacion Conciliacion?
+}
+
+model Conciliacion {
+  id            String             @id @default(cuid())
+  movimientoId  String             @unique
+  movimiento    MovimientoBancario @relation(fields: [movimientoId], references: [id])
+  facturaId     String
+  factura       Factura            @relation(fields: [facturaId], references: [id])
+  userId        String
+  user          User               @relation(fields: [userId], references: [id])
+  regla         String
+  diferenciaClp Int                @default(0)
+  createdAt     DateTime           @default(now())
 }
