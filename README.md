@@ -44,6 +44,8 @@ npx prisma db seed            # demo users, clients and invoices (refuses to run
 npm run dev                   # http://localhost:3000
 ```
 
+Or run the production image against the compose databases: `docker compose --profile app up --build`.
+
 Demo users (password `Demo1234!`): `contador@demo.cl`, `dueno@demo.cl`, `admin@demo.cl`.
 Sample statements: `tests/fixtures/banco-a.csv` and `tests/fixtures/banco-b.csv`.
 
@@ -80,14 +82,21 @@ editing, and a human decided every finding. Findings and decisions are in
 
 ## Known limitations
 
-- The login rate limit is in memory (per instance); a shared store such as Redis is needed for
-  several instances.
-- The audit write is not transactional with PostgreSQL; an outbox table would make it durable.
-- Statement CSVs carry no account number, so the same movement in two accounts of the same bank is
-  stored once.
-- A folio that happens to appear as another number in the description can produce a false
-  suggestion; that is why the app only suggests and a person confirms.
-- The owner's audit screen and the Docker image are not built yet.
+- **In-memory login rate limit.** Attempts are counted per server instance and reset on restart; with
+  several instances (or serverless) a shared store such as Redis is needed.
+- **Prisma is pinned to 6.** Prisma 7 changes configuration, generator and seeding, so it is a planned
+  migration of its own, not an automatic upgrade (Dependabot ignores Prisma majors).
+- **Accepted `npm audit` advisories** ([ADR 0001](docs/adr/0001-accepted-audit-risk.md)):
+  `deepmerge-ts` (GHSA-ggr8-5vv4-36mx) and `effect` (GHSA-7589-6fvf-x4pw), both high, both inside the
+  Prisma 6 CLI config loader. They never process user input and are only fixed by Prisma 7.
+- **Cross-database consistency is not transactional** ([ADR 0002](docs/adr/0002-idempotent-statement-import.md),
+  [ADR 0003](docs/adr/0003-atomic-confirmation-and-audit.md)): imports compensate by hand with
+  PostgreSQL as the commit point, and the audit event is written after the commit, so a MongoDB
+  failure at that moment loses the event (an outbox table would make it durable).
+- **No account column in statements**: the same movement in two accounts of the same bank is stored
+  once.
+- **Suggestions can be wrong**: a folio that appears as another number in the description can match
+  by chance, which is why the app only suggests and a person confirms.
 
 ## License
 
