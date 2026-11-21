@@ -6,6 +6,14 @@ statement, the app suggests which pending invoice each credit pays, and a person
 Portfolio project: the focus is on correctness with messy data (idempotent imports, two databases
 without a shared transaction, concurrent confirmations), server-side authorization and tests.
 
+## Live demo
+
+**https://conciliapyme.vercel.app**
+
+Demo login: `contador@demo.cl` / `Demo1234!` (fictitious data; the environment may be reset at any time).
+
+Runs on Vercel + Neon (PostgreSQL) + MongoDB Atlas, all on free plans.
+
 ## Features
 
 - **Clients and invoices**: CRUD with Chilean RUT validation (modulo 11) and integer CLP amounts.
@@ -82,8 +90,9 @@ editing, and a human decided every finding. Findings and decisions are in
 
 ## Known limitations
 
-- **In-memory login rate limit.** Attempts are counted per server instance and reset on restart; with
-  several instances (or serverless) a shared store such as Redis is needed.
+- **In-memory login rate limit.** Attempts are counted in memory per serverless instance, so on
+  Vercel each instance keeps its own count and it resets on cold starts; a shared store such as
+  Redis is the planned improvement.
 - **Prisma is pinned to 6.** Prisma 7 changes configuration, generator and seeding, so it is a planned
   migration of its own, not an automatic upgrade (Dependabot ignores Prisma majors).
 - **Accepted `npm audit` advisories** ([ADR 0001](docs/adr/0001-accepted-audit-risk.md)):
