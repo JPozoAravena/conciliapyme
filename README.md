@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ConciliaPyme
 
-## Getting Started
+Bank statement and invoice reconciliation for Chilean SMEs. An accountant uploads the bank's CSV
+statement, the app suggests which pending invoice each credit pays, and a person confirms the match.
 
-First, run the development server:
+Portfolio project: the focus is on correctness with messy data (idempotent imports, two databases
+without a shared transaction, concurrent confirmations), server-side authorization and tests.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **Clients and invoices**: CRUD with Chilean RUT validation (modulo 11) and integer CLP amounts.
+- **Statement import**: two bank CSV formats (UTF-8 or Windows-1252), strict validation, idempotent
+  re-imports and overlapping statements.
+- **Match suggestions**: 100 = exact amount + folio, 70 = exact amount + due date within 5 days,
+  40 = small difference (up to max($1,000, 1%)) + folio or close date.
+- **Atomic confirmation**: movement, invoice and reconciliation record change together, and only one
+  of several simultaneous confirmations wins. Each confirmation is written to an append-only audit log.
+- **Roles**: `CONTADOR` and `ADMIN` manage and confirm, `DUENO` reads. Checked on the server in every
+  page and action.
+
+## Stack
+
+Next.js 16 (App Router, Server Actions) · TypeScript · Tailwind CSS 4 · Auth.js v5 (credentials, JWT,
+bcrypt) · Prisma 6 + PostgreSQL 16 · Mongoose + MongoDB 7 · Zod · Vitest · Playwright · GitHub Actions ·
+SonarCloud.
+
+```mermaid
+flowchart LR
+  UI[Next.js pages<br/>Server Actions] -->|puede role check| L[src/lib<br/>pure domain logic]
+  L --> PG[(PostgreSQL<br/>clients, invoices,<br/>movements, matches)]
+  L --> MG[(MongoDB<br/>raw statement rows,<br/>import log, audit)]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Requirements: Node 22 (`.nvmrc`), Docker.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env          # then set AUTH_SECRET to a random string
+docker compose up -d          # PostgreSQL on 5433, MongoDB on 27017
+npm ci
+npx prisma migrate deploy
+npx prisma db seed            # demo users, clients and invoices (refuses to run in production)
+npm run dev                   # http://localhost:3000
+```
 
-## Learn More
+Demo users (password `Demo1234!`): `contador@demo.cl`, `dueno@demo.cl`, `admin@demo.cl`.
+Sample statements: `tests/fixtures/banco-a.csv` and `tests/fixtures/banco-b.csv`.
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run typecheck
+npm run test:cov    # unit + integration (needs Docker running); coverage measured on src/lib
+npm run test:e2e    # Playwright: login, import a statement, confirm a match
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Integration tests run against real PostgreSQL and MongoDB and clean up only what they create. CI runs
+all of the above, then SonarCloud's quality gate.
 
-## Deploy on Vercel
+## Design decisions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Recorded as ADRs in [`docs/adr`](docs/adr):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [0001](docs/adr/0001-accepted-audit-risk.md) Accepted `npm audit` advisories in the Prisma 6 CLI.
+- [0002](docs/adr/0002-idempotent-statement-import.md) Idempotent import: file SHA-256 unique in
+  MongoDB, per-line hash unique in PostgreSQL, manual compensation with PostgreSQL as commit point.
+- [0003](docs/adr/0003-atomic-confirmation-and-audit.md) Atomic confirmation with conditional updates,
+  audit written after commit.
+
+Other choices: amounts are integer CLP; dates are UTC midnight; one invalid row rejects the whole
+file; errors travel as codes in the URL, never raw messages; authorization is never done in middleware.
+
+## AI usage
+
+Built with Claude Code. One agent wrote the code, separate agents reviewed it (security, UX/UI) without
+editing, and a human decided every finding. Findings and decisions are in
+[`docs/ai-usage.md`](docs/ai-usage.md).
+
+## Known limitations
+
+- The login rate limit is in memory (per instance); a shared store such as Redis is needed for
+  several instances.
+- The audit write is not transactional with PostgreSQL; an outbox table would make it durable.
+- Statement CSVs carry no account number, so the same movement in two accounts of the same bank is
+  stored once.
+- A folio that happens to appear as another number in the description can produce a false
+  suggestion; that is why the app only suggests and a person confirms.
+- The owner's audit screen and the Docker image are not built yet.
+
+## License
+
+[MIT](LICENSE)
