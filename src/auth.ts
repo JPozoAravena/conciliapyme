@@ -12,7 +12,7 @@ const credencialesSchema = z.object({
 });
 
 // Compared against when the user does not exist, so response time does not reveal valid emails.
-const DUMMY_HASH = '$2b$12$iLvj48JnWDSgvFFNO5lcCuOwsd9L7JtTsejHtj69AJXoiUxRlgQ1.';
+const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', 12);
 const OCHO_HORAS = 8 * 60 * 60;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

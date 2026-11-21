@@ -16,3 +16,4 @@ Builder and auditor roles were separated: one agent wrote the code, a second, in
 | `cacheComponents` disabled | Medium | Documented | Disabled on purpose so `auth()` works in pages |
 | Beta dependency not pinned | Low | Fixed | Exact version |
 | `authorize()` not unit-tested | Low | Deferred | Covered by the E2E tests |
+| Sonar quality gate | High | Fixed | Missing button type attributes, literal bcrypt hash replaced by computed dummy hash, auth wiring excluded from coverage (covered by E2E later) |

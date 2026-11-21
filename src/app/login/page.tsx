@@ -32,7 +32,7 @@ export default async function LoginPage({
         <label htmlFor='password'>Contraseña</label>
         <input id='password' name='password' type='password' autoComplete='current-password' required className='rounded border px-2 py-1' />
         {error && <p role='alert' className='text-red-700'>Credenciales inválidas o demasiados intentos.</p>}
-        <button className='rounded bg-black px-3 py-2 text-white'>Ingresar</button>
+        <button type='submit' className='rounded bg-black px-3 py-2 text-white'>Ingresar</button>
       </form>
     </main>
   );

@@ -15,7 +15,7 @@ export default async function Home() {
           await signOut({ redirectTo: '/login' });
         }}
       >
-        <button className='mt-6 rounded border px-3 py-2'>Cerrar sesión</button>
+        <button type='submit' className='mt-6 rounded border px-3 py-2'>Cerrar sesión</button>
       </form>
     </main>
   );
