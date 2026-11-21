@@ -36,7 +36,7 @@ export async function Encabezado() {
                 href="/importar"
                 className="flex min-h-11 items-center px-2 font-medium hover:underline"
               >
-                Importar cartola
+                Importar
               </Link>
             )}
             <span className="texto-suave hidden sm:inline">
