@@ -18,3 +18,4 @@ export const facturaSchema = z
     message: 'El vencimiento no puede ser anterior a la emisión',
     path: ['vencimiento'],
   });
+export const idSchema = z.string().regex(/^[a-z0-9]{1,40}$/i);
