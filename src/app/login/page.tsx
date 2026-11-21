@@ -1,6 +1,7 @@
 import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
+import { Campo } from '@/app/_components/campo';
 
 export default async function LoginPage({
   searchParams,
@@ -24,16 +25,21 @@ export default async function LoginPage({
   }
 
   return (
-    <main className='mx-auto mt-24 max-w-sm px-4'>
-      <h1 className='mb-6 text-2xl font-semibold'>Ingresar a ConciliaPyme</h1>
-      <form action={login} className='flex flex-col gap-3'>
-        <label htmlFor='email'>Correo</label>
-        <input id='email' name='email' type='email' autoComplete='username' required className='rounded border px-2 py-1' />
-        <label htmlFor='password'>Contraseña</label>
-        <input id='password' name='password' type='password' autoComplete='current-password' required className='rounded border px-2 py-1' />
-        {error && <p role='alert' className='text-red-700'>Credenciales inválidas o demasiados intentos.</p>}
-        <button type='submit' className='rounded bg-black px-3 py-2 text-white'>Ingresar</button>
+    <div className='contenedor max-w-md pt-10 sm:pt-16'>
+      <h1 className='titulo mb-1'>Ingresar a ConciliaPyme</h1>
+      <p className='texto-suave mb-6'>Usa tu correo y contraseña de trabajo.</p>
+      <form action={login} className='tarjeta flex flex-col gap-4'>
+        {error && (
+          <p role='alert' className='aviso aviso-error'>
+            Credenciales inválidas o demasiados intentos.
+          </p>
+        )}
+        <Campo id='email' etiqueta='Correo' type='email' autoComplete='username' required />
+        <Campo id='password' etiqueta='Contraseña' type='password' autoComplete='current-password' required />
+        <button type='submit' className='btn btn-primario'>
+          Ingresar
+        </button>
       </form>
-    </main>
+    </div>
   );
 }

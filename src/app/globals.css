@@ -1,8 +1,54 @@
 @import "tailwindcss";
 
+/* Tokens de diseño: grilla 4/8, paleta verde "libro contable", AA en claro y oscuro. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f7f6;
+  --foreground: #14201c;
+  --surface: #ffffff;
+  --muted: #4f5f58;
+  --border: #d5ddd9;
+  --brand: #0f5e4d;
+  --brand-hover: #0a4a3c;
+  --on-brand: #ffffff;
+  --brand-soft: #e3f1ec;
+  --danger: #b42318;
+  --danger-hover: #912018;
+  --danger-soft: #fdecea;
+  --danger-border: #f3b8b2;
+  --danger-text: #8a1c13;
+  --ok-soft: #e3f4ea;
+  --ok-border: #a7d9bb;
+  --ok-text: #14532d;
+  --warn-soft: #fef3c7;
+  --warn-text: #7a4100;
+  --ring: #0f5e4d;
+  --shadow: 0 1px 2px rgb(20 32 28 / 0.06), 0 4px 16px rgb(20 32 28 / 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1512;
+    --foreground: #e8efec;
+    --surface: #141f1b;
+    --muted: #a3b5ad;
+    --border: #2a3a33;
+    --brand: #3ecfa5;
+    --brand-hover: #63dbb8;
+    --on-brand: #04201a;
+    --brand-soft: #12302a;
+    --danger: #f97066;
+    --danger-hover: #fda29b;
+    --danger-soft: #3a1714;
+    --danger-border: #7a2a24;
+    --danger-text: #fecdca;
+    --ok-soft: #12301f;
+    --ok-border: #1f5a37;
+    --ok-text: #b7ebc9;
+    --warn-soft: #3a2a07;
+    --warn-text: #fde29a;
+    --ring: #3ecfa5;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
 }
 
 @theme inline {
@@ -12,15 +58,117 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  .contenedor {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 56rem;
+    padding: 1.5rem 1rem 4rem;
+  }
+  @media (min-width: 640px) {
+    .contenedor { padding: 2.5rem 1.5rem 5rem; }
+  }
+
+  .titulo { font-size: 1.5rem; line-height: 2rem; font-weight: 650; letter-spacing: -0.01em; }
+  @media (min-width: 640px) { .titulo { font-size: 1.875rem; line-height: 2.25rem; } }
+  .subtitulo { font-size: 1.125rem; font-weight: 600; }
+  .texto-suave { color: var(--muted); font-size: 0.875rem; }
+  .enlace { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    padding: 1.25rem;
+  }
+  @media (min-width: 640px) { .tarjeta { padding: 1.5rem; } }
+
+  .etiqueta { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.375rem; }
+  .ayuda { margin-top: 0.375rem; font-size: 0.8125rem; color: var(--muted); }
+  .campo {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    color: var(--foreground);
+    background: var(--surface);
+    border: 1px solid var(--muted);
+    border-radius: 0.5rem;
+    transition: border-color 150ms ease-out;
+  }
+  .campo:hover { border-color: var(--foreground); }
+  .campo:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; border-color: var(--ring); }
+  .campo:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 150ms ease-out, transform 150ms ease-out;
+  }
+  .btn:active:not(:disabled) { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .btn-primario { background: var(--brand); color: var(--on-brand); }
+  .btn-primario:hover:not(:disabled) { background: var(--brand-hover); }
+  .btn-peligro { background: var(--danger); color: #fff; }
+  .btn-peligro:hover:not(:disabled) { background: var(--danger-hover); }
+  .btn-secundario { background: var(--surface); color: var(--foreground); border-color: var(--border); }
+  .btn-secundario:hover:not(:disabled) { background: var(--brand-soft); }
+
+  .spinner {
+    width: 1rem; height: 1rem; border-radius: 9999px;
+    border: 2px solid currentColor; border-right-color: transparent;
+    animation: girar 700ms linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+
+  .aviso { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid; font-size: 0.9375rem; animation: entrar 200ms ease-out; }
+  .aviso-error { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger-text); }
+  .aviso-ok { background: var(--ok-soft); border-color: var(--ok-border); color: var(--ok-text); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  .tabla-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface); }
+  .tabla { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9375rem; }
+  .tabla th { padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: var(--background); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .tabla td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); }
+  .tabla tbody tr:last-child td { border-bottom: 0; }
+  .tabla tbody tr:hover { background: var(--brand-soft); }
+  .tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .badge { display: inline-flex; align-items: center; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+  .badge-pendiente { background: var(--warn-soft); color: var(--warn-text); }
+  .badge-pagada { background: var(--ok-soft); color: var(--ok-text); }
+  .badge-diferencia { background: var(--danger-soft); color: var(--danger-text); }
+  .badge-neutro { background: var(--brand-soft); color: var(--brand); }
+
+  .esqueleto { background: linear-gradient(90deg, var(--border), var(--brand-soft), var(--border)); background-size: 200% 100%; border-radius: 0.5rem; animation: brillo 1.4s ease-in-out infinite; }
+  @keyframes brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .spinner { animation: none; border-right-color: currentColor; }
 }
