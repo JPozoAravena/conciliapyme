@@ -46,3 +46,6 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Internal step-by-step notes (Spanish), kept local only
+/docs/pasoapaso.md

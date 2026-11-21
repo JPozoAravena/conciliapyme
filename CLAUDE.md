@@ -11,7 +11,7 @@ Bank-statement / invoice reconciliation for Chilean SMEs. Portfolio project, pub
 - Zero paid tools or services. Local dev uses Docker (Postgres on port 5433, Mongo 27017).
 - Windows + cmd: give commands for cmd, one per line. Do not use bash-only syntax.
 - Subagents: use builder subagents (and a UX/UI one when there is a UI). Do NOT run auditor, QA or security subagents unless the user asks; for backend changes ask the user first whether to review.
-- The step-by-step guide is `docs/pasoapaso.md` (Spanish, internal notes). Read it for context before each task.
+- The step-by-step guide is `docs/pasoapaso.md` (Spanish, internal notes, git-ignored: local only). Read it for context before each task.
 - See also `AGENTS.md` for Next.js conventions.
 
 ## Stack
