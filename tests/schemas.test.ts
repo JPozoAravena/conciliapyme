@@ -43,3 +43,37 @@ describe('idSchema', () => {
     expect(idSchema.safeParse(undefined).success).toBe(false);
   });
 });
+
+describe('límites de seguridad', () => {
+  const factura = {
+    folio: 1001,
+    clienteId: 'c1',
+    montoClp: 119000,
+    emision: '2026-10-01',
+    vencimiento: '2026-10-31',
+  };
+
+  it('rechaza un folio que no cabe en un entero de 32 bits', () => {
+    expect(facturaSchema.safeParse({ ...factura, folio: '99999999999' }).success).toBe(false);
+    expect(facturaSchema.safeParse({ ...factura, folio: 2147483647 }).success).toBe(true);
+  });
+
+  it('rechaza un monto que no cabe en un entero de 32 bits', () => {
+    expect(facturaSchema.safeParse({ ...factura, montoClp: '99999999999' }).success).toBe(false);
+    expect(facturaSchema.safeParse({ ...factura, montoClp: 2147483647 }).success).toBe(true);
+  });
+
+  it('rechaza una razón social de más de 120 caracteres', () => {
+    const rut = '12.345.678-5';
+    expect(clienteSchema.safeParse({ rut, razonSocial: 'a'.repeat(121) }).success).toBe(false);
+    expect(clienteSchema.safeParse({ rut, razonSocial: 'a'.repeat(120) }).success).toBe(true);
+  });
+
+  it('rechaza fechas ausentes en vez de convertirlas a 1970', () => {
+    const sinEmision = facturaSchema.safeParse({ ...factura, emision: null });
+    expect(sinEmision.success).toBe(false);
+    if (!sinEmision.success) expect(sinEmision.error.issues[0].path).toEqual(['emision']);
+    expect(facturaSchema.safeParse({ ...factura, vencimiento: null }).success).toBe(false);
+    expect(facturaSchema.safeParse({ ...factura, emision: '' }).success).toBe(false);
+  });
+});
