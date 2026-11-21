@@ -1,0 +1,11 @@
+.git
+node_modules
+.next
+coverage
+test-results
+playwright-report
+.env
+.env.*
+!.env.example
+docs/pasoapaso.md
+*.tsbuildinfo
