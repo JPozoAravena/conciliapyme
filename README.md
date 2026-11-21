@@ -1,3 +1,5 @@
+Leer en español: [README.es.md](README.es.md)
+
 # ConciliaPyme
 
 Bank statement and invoice reconciliation for Chilean SMEs. An accountant uploads the bank's CSV
