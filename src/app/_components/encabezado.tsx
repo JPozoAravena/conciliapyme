@@ -31,6 +31,12 @@ export async function Encabezado() {
             >
               Clientes
             </Link>
+            <Link
+              href="/conciliacion"
+              className="flex min-h-11 items-center px-2 font-medium hover:underline"
+            >
+              Conciliación
+            </Link>
             {puede(session.user.role, 'cartola:importar') && (
               <Link
                 href="/importar"
