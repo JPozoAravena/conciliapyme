@@ -10,6 +10,11 @@ export async function requerirSesion(): Promise<Session> {
 }
 
 export async function tienePermiso(accion: Accion): Promise<boolean> {
+  return (await sesionConPermiso(accion)) !== null;
+}
+
+/** The session when its user may perform `accion`, otherwise null. */
+export async function sesionConPermiso(accion: Accion): Promise<Session | null> {
   const session = await auth();
-  return Boolean(session?.user && puede(session.user.role, accion));
+  return session?.user && puede(session.user.role, accion) ? session : null;
 }

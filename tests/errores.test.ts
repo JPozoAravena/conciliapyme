@@ -102,6 +102,24 @@ describe('leerAviso', () => {
     expect(leerAviso({})).toBeNull();
   });
 
+  it('antepone la fila a los errores de cartola cuando es un entero válido', () => {
+    expect(leerAviso({ error: 'cartola_monto_invalido', fila: '3' })?.mensaje).toBe(
+      'Fila 3: hay un monto que no es un número entero de pesos válido.',
+    );
+    expect(leerAviso({ error: 'cartola_monto_invalido', fila: '3abc' })?.mensaje).toBe(
+      'Hay un monto que no es un número entero de pesos válido.',
+    );
+    expect(leerAviso({ error: 'cartola_monto_invalido', fila: '999999' })?.mensaje).toBe(
+      'Hay un monto que no es un número entero de pesos válido.',
+    );
+  });
+
+  it('no antepone la fila a errores que no son de una fila', () => {
+    expect(leerAviso({ error: 'rut_duplicado', fila: '3' })?.mensaje).toBe(
+      'Ya existe un cliente con ese RUT.',
+    );
+  });
+
   it('ignora valores repetidos en la URL', () => {
     expect(leerAviso({ error: ['rut_duplicado', 'sin_permiso'] })).toBeNull();
   });

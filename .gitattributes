@@ -1,1 +1,3 @@
 .husky/* text eol=lf
+# Statement fixtures are hashed byte by byte; keep them identical on every platform.
+tests/fixtures/*.csv -text
