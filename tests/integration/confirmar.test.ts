@@ -15,8 +15,20 @@ const creados = {
 };
 let folio = 900_000_000 + Math.floor(Math.random() * 1_000_000);
 
+// Own user: CI databases are not seeded. The password is never used, so a random value is enough.
+let usuarioId: string | undefined;
 async function usuario() {
-  return prisma.user.findFirstOrThrow({ where: { email: 'contador@demo.cl' } });
+  if (!usuarioId) {
+    const u = await prisma.user.create({
+      data: {
+        email: `test-${randomUUID()}@test.local`,
+        passwordHash: randomUUID(),
+        role: 'CONTADOR',
+      },
+    });
+    usuarioId = u.id;
+  }
+  return { id: usuarioId };
 }
 
 async function escenario(montoMovimiento = 119_000, montoFactura = 119_000) {
@@ -59,6 +71,7 @@ afterAll(async () => {
   await prisma.factura.deleteMany({ where: { id: { in: creados.facturas } } });
   await prisma.cliente.deleteMany({ where: { id: { in: creados.clientes } } });
   await Auditoria.deleteMany({ entidadId: { $in: creados.movimientos } });
+  if (usuarioId) await prisma.user.delete({ where: { id: usuarioId } });
   await prisma.$disconnect();
   await mongoose.disconnect();
 });
