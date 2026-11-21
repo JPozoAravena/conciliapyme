@@ -16,10 +16,15 @@ Two idempotency rules, each enforced by a unique index:
 1. **Same file twice changes nothing.** The SHA-256 of the uploaded bytes is unique in MongoDB
    (`importacions.fileHash`). A second upload of a completed import returns "already imported".
 2. **Overlapping files do not duplicate movements.** Each line gets a hash of
-   `bank | date | amount | description | occurrence`, unique in PostgreSQL
+   `bank | date | amount | description | balance or reference | occurrence`, unique in PostgreSQL
    (`MovimientoBancario.lineHash`), and rows are inserted with `createMany({ skipDuplicates: true })`.
-   The occurrence counter tells apart two identical payments on the same day in one file, and still
-   produces the same hashes when a later file repeats those lines.
+   The running balance (bank A) or reference (bank B) tells apart identical payments on the same day
+   even when they arrive in different files. The occurrence counter covers lines that are still
+   identical. A line repeated by an overlapping statement keeps its balance, so it hashes the same.
+
+   Known limitation: the CSV has no account column, so the same movement in two accounts of the same
+   bank (same date, amount, description and balance) is stored once. Accepted until accounts are
+   modeled.
 
 Storage split:
 
@@ -39,12 +44,22 @@ PostgreSQL and MongoDB share no transaction. The import follows "record intent, 
 undo":
 
 1. Insert the import record in MongoDB with `estado: PROCESANDO` (the unique index decides races).
-2. Insert raw lines in MongoDB and movements in PostgreSQL.
-3. Mark the import `COMPLETA`.
-4. On any failure, delete what this import created in both databases.
+2. Insert raw lines in MongoDB and refresh the record's `updatedAt`.
+3. Insert movements in PostgreSQL with a single `createMany`. **This is the commit point**: one
+   statement, so either all new rows are stored or none.
+4. Mark the import `COMPLETA`.
 
-A record left in `PROCESANDO` by a crashed process blocks re-imports of that file for 5 minutes
-(`cartola_en_proceso`), then it is treated as abandoned, cleaned up and retried.
+Failures before step 3 completes undo only the MongoDB side. **PostgreSQL rows are never deleted by
+compensation**, because once stored another, overlapping import may already have counted them as
+existing (deleting them would lose movements silently).
+
+A record found in `PROCESANDO`:
+
+- with movements in PostgreSQL passed the commit point, so it is marked `COMPLETA` and reported as
+  already imported;
+- without movements and updated less than 5 minutes ago is still running (`cartola_en_proceso`);
+- without movements and older than that is abandoned: it is claimed atomically (`findOneAndDelete`
+  matching the `updatedAt` that was read), its raw lines are removed and the file is imported again.
 
 ## Alternatives considered
 
@@ -56,5 +71,7 @@ A record left in `PROCESANDO` by a crashed process blocks re-imports of that fil
 ## Consequences
 
 - Integration tests run against real PostgreSQL and MongoDB (locally via Docker, in CI as services).
-- Compensation is best effort: if the process dies during step 4, the 5-minute abandonment rule
-  cleans up on the next attempt.
+- If marking `COMPLETA` fails, the user sees an error but the movements are kept; the next upload of
+  the same file completes the import.
+- A process that dies before the commit point leaves only MongoDB data, which the 5-minute
+  abandonment rule cleans up on the next attempt.

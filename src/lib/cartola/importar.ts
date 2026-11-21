@@ -8,7 +8,7 @@ import type { ResultadoImportacion } from './resultado';
 
 export type { ResultadoImportacion } from './resultado';
 
-/** An import still PROCESANDO after this long is treated as abandoned (crashed process) and retried. */
+/** An import still PROCESANDO after this long, with no stored movements, is treated as abandoned. */
 export const MS_ABANDONO = 5 * 60 * 1000;
 
 type Entrada = { bytes: Uint8Array; nombreArchivo: string; userId: string };
@@ -16,11 +16,17 @@ type Entrada = { bytes: Uint8Array; nombreArchivo: string; userId: string };
 const esDuplicadoMongo = (e: unknown) =>
   typeof e === 'object' && e !== null && 'code' in e && e.code === 11000;
 
-/** PostgreSQL and MongoDB share no transaction, so a failed import is undone by hand. */
-async function compensar(importId: string): Promise<void> {
-  await prisma.movimientoBancario.deleteMany({ where: { importId } });
+/**
+ * Undoes the MongoDB side of an import. PostgreSQL rows are never deleted here: the single
+ * createMany is the commit point, and once it ran other imports may already count those rows.
+ */
+async function descartarEnMongo(importId: string): Promise<void> {
   await CartolaLinea.deleteMany({ importId });
-  await Importacion.deleteOne({ _id: importId });
+  await Importacion.deleteOne({ _id: importId, estado: 'PROCESANDO' });
+}
+
+async function tieneMovimientos(importId: string): Promise<boolean> {
+  return (await prisma.movimientoBancario.findFirst({ where: { importId }, select: { id: true } })) !== null;
 }
 
 /** Returns the result for an existing import of the same file, or null when the file can be imported. */
@@ -29,10 +35,23 @@ async function revisarExistente(fileHash: string): Promise<ResultadoImportacion 
   if (!existente) return null;
   const importId = String(existente._id);
   if (existente.estado === 'COMPLETA') return { duplicada: true, importId };
+
+  // Movements stored means the import passed its commit point: finish it instead of redoing it.
+  if (await tieneMovimientos(importId)) {
+    await Importacion.updateOne({ _id: existente._id }, { estado: 'COMPLETA' });
+    return { duplicada: true, importId };
+  }
   if (Date.now() - existente.updatedAt.getTime() < MS_ABANDONO) {
     throw new CartolaError('cartola_en_proceso');
   }
-  await compensar(importId);
+  // Claim the abandoned record atomically: only succeeds if nobody touched it since we read it.
+  const reclamada = await Importacion.findOneAndDelete({
+    _id: existente._id,
+    estado: 'PROCESANDO',
+    updatedAt: existente.updatedAt,
+  });
+  if (!reclamada) throw new CartolaError('cartola_en_proceso');
+  await CartolaLinea.deleteMany({ importId });
   return null;
 }
 
@@ -48,6 +67,22 @@ async function registrar(fileHash: string, parseada: CartolaParseada, entrada: E
   } catch (e) {
     // Another request with the same file won the race on the unique index.
     if (esDuplicadoMongo(e)) return null;
+    throw e;
+  }
+}
+
+/** Stores raw lines and refreshes updatedAt, so a slow import is not taken for an abandoned one. */
+async function guardarLineasCrudas(importId: string, parseada: CartolaParseada): Promise<void> {
+  try {
+    await CartolaLinea.insertMany(parseada.lineas.map((l) => ({ importId, fila: l.fila, raw: l.raw })));
+    const vigente = await Importacion.updateOne(
+      { _id: importId, estado: 'PROCESANDO' },
+      { $set: { updatedAt: new Date() } },
+    );
+    // The record was claimed as abandoned meanwhile: stop before writing to PostgreSQL.
+    if (vigente.matchedCount === 0) throw new CartolaError('cartola_en_proceso');
+  } catch (e) {
+    await descartarEnMongo(importId);
     throw e;
   }
 }
@@ -69,11 +104,12 @@ export async function importarCartola(entrada: Entrada): Promise<ResultadoImport
   }
 
   const importId = String(importacion._id);
+  await guardarLineasCrudas(importId, parseada);
+
+  const hashes = hashesDeLineas(parseada.banco, parseada.lineas);
+  let nuevas: number;
   try {
-    await CartolaLinea.insertMany(
-      parseada.lineas.map((l) => ({ importId, fila: l.fila, raw: l.raw })),
-    );
-    const hashes = hashesDeLineas(parseada.banco, parseada.lineas);
+    // Single INSERT: either all new rows are stored or none. This is the commit point.
     const { count } = await prisma.movimientoBancario.createMany({
       data: parseada.lineas.map((l, i) => ({
         importId,
@@ -86,10 +122,13 @@ export async function importarCartola(entrada: Entrada): Promise<ResultadoImport
       })),
       skipDuplicates: true,
     });
-    await Importacion.updateOne({ _id: importacion._id }, { estado: 'COMPLETA' });
-    return { duplicada: false, importId, nuevas: count, omitidas: parseada.lineas.length - count };
+    nuevas = count;
   } catch (e) {
-    await compensar(importId);
+    await descartarEnMongo(importId);
     throw e;
   }
+
+  // If this fails the movements stay; the next attempt with the same file completes the import.
+  await Importacion.updateOne({ _id: importacion._id }, { estado: 'COMPLETA' });
+  return { duplicada: false, importId, nuevas, omitidas: parseada.lineas.length - nuevas };
 }

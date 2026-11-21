@@ -61,7 +61,12 @@ describe('parseCartola', () => {
     const r = parseCartola(leer('banco-a.csv'));
     expect(r.banco).toBe('BANCO_A');
     expect(r.lineas.map((l) => l.montoClp)).toEqual([1190000, -85000, 237500]);
-    expect(r.lineas[0]).toMatchObject({ fila: 2, descripcion: 'TRANSF DE 76000000-0 FAC 1001' });
+    expect(r.lineas[0]).toMatchObject({
+      fila: 2,
+      descripcion: 'TRANSF DE 76000000-0 FAC 1001',
+      saldo: '5400000',
+    });
+    expect(parseCartola(leer('banco-b.csv')).lineas[0].saldo).toBeNull();
   });
 
   it('detecta el formato del banco B y conserva la referencia', () => {

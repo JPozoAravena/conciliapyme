@@ -30,6 +30,8 @@ export type LineaCartola = {
   montoClp: number;
   descripcion: string;
   referencia: string | null;
+  /** Running balance after the movement (bank A), normalized to integer CLP as text. */
+  saldo: string | null;
   raw: Record<string, string>;
 };
 
@@ -113,6 +115,7 @@ function leerLinea(banco: Banco, raw: Record<string, string>, fila: number): Lin
       montoClp,
       descripcion: texto(raw.descripcion, MAX_DESCRIPCION),
       referencia: null,
+      saldo: raw.saldo?.trim() ? String(parseMontoClp(raw.saldo)) : null,
       raw,
     };
   }
@@ -123,6 +126,7 @@ function leerLinea(banco: Banco, raw: Record<string, string>, fila: number): Lin
     montoClp: parseMontoClp(raw.amount),
     descripcion: texto(raw.detail, MAX_DESCRIPCION),
     referencia: referencia === '' ? null : referencia,
+    saldo: null,
     raw,
   };
 }

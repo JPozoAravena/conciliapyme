@@ -58,13 +58,29 @@ describe('hashArchivo', () => {
 });
 
 describe('hashesDeLineas', () => {
-  const linea = (descripcion: string, montoClp = 1000): LineaCartola => ({
+  const linea = (descripcion: string, montoClp = 1000, saldo: string | null = null): LineaCartola => ({
     fila: 2,
     fecha: new Date('2026-09-02T00:00:00.000Z'),
     montoClp,
     descripcion,
     referencia: null,
+    saldo,
     raw: {},
+  });
+
+  it('distingue pagos idénticos del mismo día por su saldo', () => {
+    const [enA] = hashesDeLineas('BANCO_A', [linea('PAGO', 1000, '10.000')]);
+    const [enOtraCartola] = hashesDeLineas('BANCO_A', [linea('PAGO', 1000, '20.000')]);
+    expect(enOtraCartola).not.toBe(enA);
+    // The same line repeated in an overlapping statement keeps its balance, so it still matches.
+    expect(hashesDeLineas('BANCO_A', [linea('PAGO', 1000, '10.000')])[0]).toBe(enA);
+  });
+
+  it('distingue movimientos idénticos del banco B por su referencia', () => {
+    const conRef = (referencia: string): LineaCartola => ({ ...linea('PAGO'), referencia });
+    expect(hashesDeLineas('BANCO_B', [conRef('FAC 1')])[0]).not.toBe(
+      hashesDeLineas('BANCO_B', [conRef('FAC 2')])[0],
+    );
   });
 
   it('el mismo contenido produce los mismos hashes', () => {

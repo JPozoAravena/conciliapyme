@@ -112,6 +112,71 @@ describe('importarCartola', () => {
     expect(r.importId).not.toBe(String(registro._id));
   });
 
+  it('no borra movimientos ya guardados al reintentar una importación caída tras PostgreSQL', async () => {
+    // A crashed after inserting its movements but before being marked COMPLETA.
+    const id = randomUUID().slice(0, 8);
+    const encabezado = 'Fecha;Descripción;Cargo;Abono;Saldo\n';
+    const l1 = `02/09/2026;CAIDA ${id} UNO;;100.000;100.000\n`;
+    const l2 = `03/09/2026;CAIDA ${id} DOS;;200.000;300.000\n`;
+    const l3 = `04/09/2026;CAIDA ${id} TRES;;300.000;600.000\n`;
+    const a = await importar(encabezado + l1 + l2);
+    await Importacion.collection.updateOne(
+      { _id: new mongoose.Types.ObjectId(a.importId) },
+      { $set: { estado: 'PROCESANDO', updatedAt: new Date(Date.now() - MS_ABANDONO - 1000) } },
+    );
+
+    // B overlaps A: its repeated lines are skipped because A already stored them.
+    const b = await importar(encabezado + l2 + l3, 'b.csv');
+    expect(b).toMatchObject({ duplicada: false, nuevas: 1, omitidas: 1 });
+
+    // Retrying A must finalize it, not delete the movements that B relies on.
+    expect(await importar(encabezado + l1 + l2)).toEqual({ duplicada: true, importId: a.importId });
+    expect(await Importacion.findById(a.importId).lean()).toMatchObject({ estado: 'COMPLETA' });
+    const ids = [a.importId, b.importId];
+    expect(await prisma.movimientoBancario.count({ where: { importId: { in: ids } } })).toBe(3);
+  });
+
+  it('conserva los movimientos si falla al marcar la importación como completa', async () => {
+    const contenido = cartolaUnica();
+    const original = Importacion.updateOne.bind(Importacion);
+    vi.spyOn(Importacion, 'updateOne').mockImplementation(((filtro, cambio, ...resto) => {
+      if (cambio && 'estado' in cambio && cambio.estado === 'COMPLETA') {
+        throw new Error('mongo caído');
+      }
+      return original(filtro, cambio, ...resto);
+    }) as typeof Importacion.updateOne);
+    await expect(
+      importarCartola({ bytes: bytes(contenido), nombreArchivo: 'f.csv', userId: usuario }),
+    ).rejects.toThrow('mongo caído');
+    vi.restoreAllMocks();
+
+    const registro = await Importacion.findOne({ fileHash: hashArchivo(bytes(contenido)) }).lean();
+    expect(registro).toMatchObject({ estado: 'PROCESANDO' });
+    creados.add(String(registro?._id));
+    expect(await prisma.movimientoBancario.count({ where: { importId: String(registro?._id) } })).toBe(2);
+    // The next attempt sees the stored movements and completes the import instead of redoing it.
+    expect(await importar(contenido)).toEqual({ duplicada: true, importId: String(registro?._id) });
+  });
+
+  it('cartolas solapadas no duplican y un pago idéntico del mismo día en otra cartola sí entra', async () => {
+    const id = randomUUID().slice(0, 8);
+    const encabezado = 'Fecha;Descripción;Cargo;Abono;Saldo\n';
+    const pago = (saldo: string) => `02/09/2026;PAGO ${id};;10.000;${saldo}\n`;
+    const otra = `03/09/2026;OTRA ${id};;5.000;35.000\n`;
+    // A: two identical payments on 02/09. B repeats them (overlap) and adds a third identical
+    // payment and another movement. C only has a fourth identical payment, without overlap.
+    const a = await importar(encabezado + pago('10.000') + pago('20.000'));
+    expect(a).toMatchObject({ nuevas: 2, omitidas: 0 });
+    const b = await importar(encabezado + pago('10.000') + pago('20.000') + pago('30.000') + otra, 'b.csv');
+    expect(b).toMatchObject({ duplicada: false, nuevas: 2, omitidas: 2 });
+    const c = await importar(encabezado + pago('45.000'), 'c.csv');
+    expect(c).toMatchObject({ duplicada: false, nuevas: 1, omitidas: 0 });
+
+    const ids = [a, b, c].map((r) => r.importId);
+    const movimientos = await prisma.movimientoBancario.findMany({ where: { importId: { in: ids } } });
+    expect(movimientos).toHaveLength(5);
+  });
+
   it('dos importaciones simultáneas del mismo archivo no duplican nada', async () => {
     const contenido = cartolaUnica();
     const resultados = await Promise.allSettled([importar(contenido), importar(contenido)]);
