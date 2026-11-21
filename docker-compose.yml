@@ -11,6 +11,17 @@ services:
     image: mongo:7
     ports: ['27017:27017']
     volumes: ['mongodata:/data/db']
+  app:
+    # Opt-in: docker compose --profile app up --build
+    profiles: ['app']
+    build: .
+    ports: ['3000:3000']
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://conciliapyme:conciliapyme@postgres:5432/conciliapyme
+      MONGODB_URI: mongodb://mongo:27017/conciliapyme
+      AUTH_TRUST_HOST: 'true'
+    depends_on: [postgres, mongo]
 volumes:
   pgdata:
   mongodata:
