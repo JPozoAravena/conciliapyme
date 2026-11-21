@@ -45,6 +45,14 @@ export async function Encabezado() {
                 Importar
               </Link>
             )}
+            {puede(session.user.role, 'auditoria:ver') && (
+              <Link
+                href="/auditoria"
+                className="flex min-h-11 items-center px-2 font-medium hover:underline"
+              >
+                Auditoría
+              </Link>
+            )}
             <span className="texto-suave hidden sm:inline">
               {session.user.email}
             </span>
