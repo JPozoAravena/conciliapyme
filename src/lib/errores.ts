@@ -29,6 +29,10 @@ const mensajesError = {
   cartola_descripcion_larga: 'Hay una descripción o referencia demasiado larga.',
   cartola_en_proceso: 'Este archivo se está importando en este momento. Revisa en unos segundos.',
   importacion_fallida: 'No se pudo importar el archivo. Inténtalo nuevamente.',
+  conciliacion_sin_regla: 'Ese movimiento y esa factura no cumplen ninguna regla de coincidencia.',
+  movimiento_ya_conciliado: 'Ese movimiento ya fue conciliado.',
+  factura_no_pendiente: 'Esa factura ya no está pendiente.',
+  conciliacion_fallida: 'No se pudo confirmar la conciliación. Inténtalo nuevamente.',
 } as const;
 
 const codigosConFila: ReadonlySet<string> = new Set([
@@ -43,6 +47,7 @@ const mensajesOk = {
   cliente_actualizado: 'Cliente actualizado.',
   cliente_eliminado: 'Cliente eliminado.',
   factura_creada: 'Factura creada.',
+  conciliacion_confirmada: 'Conciliación confirmada.',
 } as const;
 
 export type CodigoError = keyof typeof mensajesError;

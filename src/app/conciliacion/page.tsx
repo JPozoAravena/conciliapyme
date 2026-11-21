@@ -1,4 +1,9 @@
+import { Aviso } from '@/app/_components/aviso';
+import { BotonEnviar } from '@/app/_components/boton-enviar';
 import { requerirSesion } from '@/app/_lib/autorizacion';
+import { leerAviso } from '@/lib/errores';
+import { puede } from '@/lib/rbac';
+import { confirmarAction } from './actions';
 import { sugerir, type Regla } from '@/lib/conciliacion/sugerir';
 import { prisma } from '@/lib/db';
 import { formatearClp, formatearFecha } from '@/lib/formato';
@@ -11,8 +16,12 @@ const nombreRegla: Record<Regla, string> = {
 
 const MAX_MOVIMIENTOS = 100;
 
-export default async function ConciliacionPage() {
-  await requerirSesion();
+export default async function ConciliacionPage({
+  searchParams,
+}: PageProps<'/conciliacion'>) {
+  const session = await requerirSesion();
+  const aviso = leerAviso(await searchParams);
+  const puedeConfirmar = puede(session.user.role, 'conciliacion:confirmar');
   const [movimientos, facturas] = await Promise.all([
     prisma.movimientoBancario.findMany({
       where: { estado: 'SIN_CONCILIAR', montoClp: { gt: 0 } },
@@ -41,6 +50,7 @@ export default async function ConciliacionPage() {
           corresponderles. El sistema solo sugiere: una persona confirma.
         </p>
       </div>
+      <Aviso aviso={aviso} />
 
       {movimientos.length === 0 ? (
         <p className="tarjeta">No hay abonos pendientes de conciliar.</p>
@@ -79,6 +89,11 @@ export default async function ConciliacionPage() {
                           <th scope="col" className="num">
                             Diferencia
                           </th>
+                          {puedeConfirmar && (
+                            <th scope="col">
+                              <span className="sr-only">Acción</span>
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -97,6 +112,23 @@ export default async function ConciliacionPage() {
                               <td className="num">
                                 {formatearClp(s.diferenciaClp)}
                               </td>
+                              {puedeConfirmar && (
+                                <td>
+                                  <form
+                                    action={confirmarAction.bind(
+                                      null,
+                                      m.id,
+                                      f.id,
+                                    )}
+                                  >
+                                    <BotonEnviar
+                                      texto="Confirmar"
+                                      textoPendiente="Confirmando…"
+                                      etiqueta={`Confirmar factura ${f.folio} para ${m.descripcion}`}
+                                    />
+                                  </form>
+                                </td>
+                              )}
                             </tr>
                           );
                         })}
