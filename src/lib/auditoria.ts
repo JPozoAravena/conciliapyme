@@ -1,4 +1,10 @@
 import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
+import {
+  consultaMongo,
+  POR_PAGINA,
+  type AccionAuditoria,
+  type FiltrosAuditoria,
+} from '@/lib/auditoria-filtros';
 import { connectMongo } from '@/lib/mongo';
 
 /** Append-only audit log: this module exposes no update or delete. */
@@ -20,7 +26,7 @@ export const Auditoria: Model<InferSchemaType<typeof auditoriaSchema>> =
 
 export type EventoAuditoria = {
   userId: string;
-  accion: 'CONCILIACION_CONFIRMADA';
+  accion: AccionAuditoria;
   entidad: string;
   entidadId: string;
   antes?: Record<string, unknown>;
@@ -45,4 +51,47 @@ export async function registrarAuditoria(
     );
     return false;
   }
+}
+
+export type PaginaAuditoria = {
+  eventos: {
+    id: string;
+    userId: string;
+    accion: string;
+    entidad: string;
+    entidadId: string;
+    fecha: Date;
+    despues?: unknown;
+  }[];
+  total: number;
+  paginas: number;
+};
+
+/** Newest first, POR_PAGINA per page. */
+export async function listarAuditoria(
+  filtros: FiltrosAuditoria,
+): Promise<PaginaAuditoria> {
+  await connectMongo();
+  const consulta = consultaMongo(filtros);
+  const [docs, total] = await Promise.all([
+    Auditoria.find(consulta)
+      .sort({ fecha: -1, _id: -1 })
+      .skip((filtros.pagina - 1) * POR_PAGINA)
+      .limit(POR_PAGINA)
+      .lean(),
+    Auditoria.countDocuments(consulta),
+  ]);
+  return {
+    eventos: docs.map((d) => ({
+      id: String(d._id),
+      userId: d.userId,
+      accion: d.accion,
+      entidad: d.entidad,
+      entidadId: d.entidadId,
+      fecha: d.fecha,
+      despues: d.despues,
+    })),
+    total,
+    paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
+  };
 }
