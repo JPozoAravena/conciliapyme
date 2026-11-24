@@ -6,8 +6,8 @@ import { LoginForm } from '@/components/login/login-form';
 import { Brand } from '@/components/shell/brand';
 import { Card } from '@/components/ui/card';
 
-const MOSTRAR_DEMO =
-  process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_SHOW_DEMO_USERS === 'true';
+// The public demo credentials are part of the README; hide them with NEXT_PUBLIC_SHOW_DEMO_USERS=false.
+const MOSTRAR_DEMO = process.env.NEXT_PUBLIC_SHOW_DEMO_USERS !== 'false';
 
 export default async function LoginPage({
   searchParams,
@@ -31,7 +31,7 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="relative isolate flex min-h-[calc(100dvh-2rem)] w-full items-start justify-center overflow-hidden px-4 pb-10 pt-8 sm:items-center sm:pt-10">
+    <div className="relative isolate flex min-h-[calc(100dvh-3.5rem-1px)] w-full items-start justify-center overflow-hidden px-4 pb-10 pt-8 sm:items-center sm:pt-10">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60rem_28rem_at_50%_-8rem,var(--brand-soft),transparent_70%)]"
