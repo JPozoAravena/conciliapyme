@@ -131,3 +131,6 @@ Anything below goes beyond styling and would touch domain, actions, schema or au
 
 - Pages still set their own `.contenedor`/`<h1 class="titulo">` markup; unify page headers in a later phase.
 - Import result has no rejected-row details (line number and reason): the importer aborts on the first bad row and reports it as a single URL error code; a per-row rejection list needs a domain change.
+- Dashboard imports show file, bank, total rows and status only: the import log stores no new/duplicate row counts; adding them needs a domain/schema change.
+- Filtered lists scan `Factura` by `estado`, `clienteId` and `emision` with no secondary indexes; add them in a migration if data grows.
+- Client search matches RUT as stored (no dot/hyphen normalization).

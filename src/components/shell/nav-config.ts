@@ -1,4 +1,5 @@
 import {
+  FileText,
   GitCompareArrows,
   LayoutDashboard,
   ScrollText,
@@ -21,6 +22,7 @@ export type NavItemConfig = {
 
 export const NAV_ITEMS: NavItemConfig[] = [
   { href: '/', label: 'Inicio', Icon: LayoutDashboard },
+  { href: '/facturas', label: 'Facturas', Icon: FileText },
   { href: '/clientes', label: 'Clientes', Icon: Users },
   { href: '/importar', label: 'Importar cartola', Icon: Upload, permiso: 'cartola:importar' },
   { href: '/conciliacion', label: 'Conciliación', Icon: GitCompareArrows },
