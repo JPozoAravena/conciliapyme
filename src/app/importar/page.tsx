@@ -1,13 +1,12 @@
 import { Aviso } from '@/app/_components/aviso';
-import { BotonEnviar } from '@/app/_components/boton-enviar';
 import { requerirSesion } from '@/app/_lib/autorizacion';
-import { leerAviso } from '@/lib/errores';
+import { FormatosAceptados } from '@/components/importar/formatos-aceptados';
+import { FormularioImportar } from '@/components/importar/formulario-importar';
+import { ResultadoImportacion } from '@/components/importar/resultado-importacion';
+import { Card, CardTitle } from '@/components/ui/card';
 import { leerResultadoImportacion } from '@/lib/cartola/resultado';
+import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
-import { importarCartolaAction } from './actions';
-import { FormatosAceptados } from './formatos-aceptados';
-import { ResultadoImportacion } from './resultado-importacion';
-import { SelectorArchivo } from './selector-archivo';
 
 export default async function ImportarPage({
   searchParams,
@@ -31,22 +30,12 @@ export default async function ImportarPage({
       {resultado && <ResultadoImportacion resultado={resultado} />}
 
       {puedeImportar ? (
-        <section aria-labelledby="subir" className="tarjeta">
-          <h2 id="subir" className="subtitulo mb-4">
+        <Card aria-labelledby="subir">
+          <CardTitle id="subir" className="mb-4">
             Subir archivo
-          </h2>
-          <form
-            action={importarCartolaAction}
-            className="flex flex-col gap-4 sm:max-w-xl"
-          >
-            <SelectorArchivo />
-            <BotonEnviar
-              texto="Importar cartola"
-              textoPendiente="Importando…"
-              className="w-full sm:w-auto sm:self-start"
-            />
-          </form>
-        </section>
+          </CardTitle>
+          <FormularioImportar />
+        </Card>
       ) : (
         <p className="tarjeta texto-suave">
           Tu rol permite ver la información, pero no importar cartolas.
