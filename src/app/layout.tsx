@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/feedback/toaster";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { AppShell } from "@/components/shell/app-shell";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
@@ -28,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
+        <MotionProvider>
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded-md focus:bg-[var(--surface)] focus:px-3 focus:py-2"
@@ -39,6 +42,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
         </AppShell>
+        <Toaster />
+        </MotionProvider>
         </ThemeProvider>
       </body>
     </html>

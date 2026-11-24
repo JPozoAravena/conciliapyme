@@ -4,6 +4,7 @@ import { obtenerKpis } from '@/app/_lib/dashboard-kpis';
 import { AccionSiguiente } from '@/components/dashboard/accion-siguiente';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { UltimasImportaciones } from '@/components/dashboard/ultimas-importaciones';
+import { FadeIn } from '@/components/motion/fade-in';
 import { formatearClp, formatearFecha } from '@/lib/formato';
 import { puede } from '@/lib/rbac';
 
@@ -23,32 +24,40 @@ export default async function Home() {
       </div>
       <AccionSiguiente sinConciliar={movimientos.sinConciliar} puedeImportar={puedeImportar} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Facturas pendientes"
-          value={String(facturasPendientes.cantidad)}
-          context="Esperan un pago conciliado"
-          Icon={FileClock}
-        />
-        <StatCard
-          label="Monto por cobrar"
-          value={formatearClp(facturasPendientes.totalClp)}
-          context="Suma de facturas pendientes"
-          Icon={CircleDollarSign}
-        />
-        <StatCard
-          label="Movimientos sin conciliar"
-          value={String(movimientos.sinConciliar)}
-          context={`De ${movimientos.total} importados`}
-          Icon={Landmark}
-        />
-        <StatCard
-          label="Tasa de conciliación"
-          value={tasaConciliacion === null ? '—' : `${tasaConciliacion}%`}
-          context={
-            tasaConciliacion === null ? 'Aún no hay movimientos' : 'Movimientos ya conciliados'
-          }
-          Icon={Percent}
-        />
+        <FadeIn index={0} className="h-full">
+          <StatCard
+            label="Facturas pendientes"
+            value={String(facturasPendientes.cantidad)}
+            context="Esperan un pago conciliado"
+            Icon={FileClock}
+          />
+        </FadeIn>
+        <FadeIn index={1} className="h-full">
+          <StatCard
+            label="Monto por cobrar"
+            value={formatearClp(facturasPendientes.totalClp)}
+            context="Suma de facturas pendientes"
+            Icon={CircleDollarSign}
+          />
+        </FadeIn>
+        <FadeIn index={2} className="h-full">
+          <StatCard
+            label="Movimientos sin conciliar"
+            value={String(movimientos.sinConciliar)}
+            context={`De ${movimientos.total} importados`}
+            Icon={Landmark}
+          />
+        </FadeIn>
+        <FadeIn index={3} className="h-full">
+          <StatCard
+            label="Tasa de conciliación"
+            value={tasaConciliacion === null ? '—' : `${tasaConciliacion}%`}
+            context={
+              tasaConciliacion === null ? 'Aún no hay movimientos' : 'Movimientos ya conciliados'
+            }
+            Icon={Percent}
+          />
+        </FadeIn>
       </div>
       {puedeImportar && <UltimasImportaciones importaciones={kpis.importaciones} />}
     </div>
