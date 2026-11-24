@@ -40,7 +40,7 @@ export function LoginForm({ action, error, mostrarDemo }: LoginFormProps) {
         <Field label="Contraseña">
           <Input name="password" type="password" autoComplete="current-password" required />
         </Field>
-        <SubmitButton pendingText="Ingresando…" className="w-full">
+        <SubmitButton pendingText="Ingresando…" className="login-cta w-full">
           Ingresar
         </SubmitButton>
       </form>
