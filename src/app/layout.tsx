@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Encabezado } from "./_components/encabezado";
+import { AppShell } from "@/components/shell/app-shell";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 const geistSans = Geist({
@@ -34,10 +34,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
-        <Encabezado />
-        <main id="contenido" className="flex-1">
-          {children}
-        </main>
+        <AppShell>
+          <main id="contenido" className="flex-1">
+            {children}
+          </main>
+        </AppShell>
         </ThemeProvider>
       </body>
     </html>
