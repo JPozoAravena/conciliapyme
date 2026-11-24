@@ -126,3 +126,7 @@ Anything below goes beyond styling and would touch domain, actions, schema or au
 - Conciliation with many suggestions and the audit pagination (more than one page) were not reached: only two audit events and a handful of movements exist.
 - `/api/health` was not captured (not a UI page).
 - Dark mode was captured for the CONTADOR flow only (and not for DUENO); dark axe was not run.
+
+## Out-of-scope notes
+
+- Pages still set their own `.contenedor`/`<h1 class="titulo">` markup; unify page headers in a later phase.
