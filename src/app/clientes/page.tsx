@@ -1,69 +1,75 @@
+import { Users } from 'lucide-react';
 import Link from 'next/link';
 import { Aviso } from '@/app/_components/aviso';
 import { BotonEnviar } from '@/app/_components/boton-enviar';
 import { CamposCliente } from '@/app/_components/campos-cliente';
 import { requerirSesion } from '@/app/_lib/autorizacion';
-import { prisma } from '@/lib/db';
+import { listarClientes } from '@/app/_lib/clientes-listado';
+import { leerFiltrosClientes, paramsClientes } from '@/app/_lib/clientes-params';
+import { POR_PAGINA } from '@/app/_lib/listado-params';
+import { ClientesBusqueda } from '@/components/clientes/clientes-busqueda';
+import { ClientesTabla } from '@/components/clientes/clientes-tabla';
+import { Pagination } from '@/components/data-table/pagination';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
 import { crearCliente } from './actions';
 
+const BASE = '/clientes';
+
 export default async function ClientesPage({ searchParams }: PageProps<'/clientes'>) {
   const session = await requerirSesion();
-  const aviso = leerAviso(await searchParams);
+  const query = await searchParams;
+  const aviso = leerAviso(query);
+  const filtros = leerFiltrosClientes(query);
   const puedeGestionar = puede(session.user.role, 'cliente:gestionar');
-  const clientes = await prisma.cliente.findMany({
-    orderBy: { razonSocial: 'asc' },
-    include: { _count: { select: { facturas: true } } },
-  });
+  const pagina = await listarClientes(filtros);
+  const params = paramsClientes(filtros);
 
   return (
     <div className='contenedor flex flex-col gap-6'>
       <div>
         <h1 className='titulo'>Clientes</h1>
-        <p className='texto-suave mt-1'>
-          {clientes.length} {clientes.length === 1 ? 'cliente registrado' : 'clientes registrados'}
+        <p className='mt-1 text-muted'>
+          {pagina.total} {pagina.total === 1 ? 'cliente' : 'clientes'}
+          {filtros.q ? ' encontrados' : ' registrados'}
         </p>
       </div>
       <Aviso aviso={aviso} />
+      <ClientesBusqueda base={BASE} filtros={filtros} />
 
-      {clientes.length === 0 ? (
-        <div className='tarjeta text-center'>
-          <p className='font-semibold'>Aún no hay clientes registrados.</p>
-          <p className='texto-suave mt-1'>
-            {puedeGestionar
-              ? 'Crea el primero con el formulario de más abajo.'
-              : 'Cuando un contador agregue clientes aparecerán aquí.'}
-          </p>
-        </div>
+      {pagina.total === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={filtros.q ? 'No hay clientes con esa búsqueda' : 'Aún no hay clientes registrados.'}
+          description={
+            filtros.q
+              ? 'Revisa el nombre o RUT, o quita la búsqueda.'
+              : puedeGestionar
+                ? 'Crea el primero con el formulario de más abajo.'
+                : 'Cuando un contador agregue clientes aparecerán aquí.'
+          }
+          action={
+            filtros.q ? (
+              <Button asChild variant='secondary'>
+                <Link href={BASE}>Limpiar búsqueda</Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
-        <div className='tabla-scroll'>
-          <table className='tabla'>
-            <caption className='sr-only'>Listado de clientes</caption>
-            <thead>
-              <tr>
-                <th scope='col'>RUT</th>
-                <th scope='col'>Razón social</th>
-                <th scope='col' className='num'>
-                  Facturas
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((c) => (
-                <tr key={c.id}>
-                  <td className='whitespace-nowrap tabular-nums'>{c.rut}</td>
-                  <td>
-                    <Link href={`/clientes/${c.id}`} className='enlace inline-flex min-h-11 items-center'>
-                      {c.razonSocial}
-                    </Link>
-                  </td>
-                  <td className='num'>{c._count.facturas}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <ClientesTabla filas={pagina.filas} filtros={filtros} base={BASE} params={params} />
+          <Pagination
+            base={BASE}
+            params={params}
+            pagina={pagina.pagina}
+            paginas={pagina.paginas}
+            porPagina={POR_PAGINA}
+            total={pagina.total}
+          />
+        </>
       )}
 
       {puedeGestionar && (
