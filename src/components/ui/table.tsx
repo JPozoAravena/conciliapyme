@@ -11,7 +11,8 @@ export function Table({ className, label, ...props }: TableProps) {
     <div
       role="region"
       aria-label={label}
-      tabIndex={0}
+      // Scrollable regions must be keyboard-focusable (axe scrollable-region-focusable).
+      tabIndex={0} // NOSONAR
       className="overflow-x-auto rounded-lg border border-border bg-surface"
     >
       <table
