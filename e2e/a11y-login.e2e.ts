@@ -10,6 +10,12 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme });
     await page.goto('/login');
     await expect(page.getByLabel('Correo')).toBeVisible();
+    // Contrast is only meaningful once the entrance fade-in has finished.
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll<HTMLElement>('[style*="opacity"]')].every(
+        (el) => getComputedStyle(el).opacity === '1',
+      ),
+    );
 
     const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
     const graves = violations.filter(
