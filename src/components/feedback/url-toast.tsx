@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import type { Aviso } from '@/lib/errores';
@@ -9,7 +9,6 @@ const PARAMS_AVISO = ['error', 'ok', 'fila'];
 
 /** Shows the URL notice as a toast once, then drops its params so a reload does not repeat it. */
 export function UrlToast({ aviso }: { aviso: Aviso | null }) {
-  const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
   const mostrado = useRef<string | null>(null);
@@ -28,8 +27,10 @@ export function UrlToast({ aviso }: { aviso: Aviso | null }) {
     const restantes = new URLSearchParams(search.toString());
     for (const clave of PARAMS_AVISO) restantes.delete(clave);
     const query = restantes.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [aviso, pathname, router, search]);
+    // Native replaceState cleans the URL without re-rendering the server page, so the
+    // in-page banner (no-JS fallback) stays visible while a reload won't repeat the toast.
+    window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname);
+  }, [aviso, pathname, search]);
 
   return null;
 }
