@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/auth';
 import { puede } from '@/lib/rbac';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 export async function Encabezado() {
   const session = await auth();
@@ -20,6 +21,7 @@ export async function Encabezado() {
           </span>
           ConciliaPyme
         </Link>
+        <ThemeToggle />
         {session?.user && (
           <nav
             aria-label="Principal"

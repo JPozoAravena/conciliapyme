@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Encabezado } from "./_components/encabezado";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,8 +24,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
+        <ThemeProvider>
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 focus:rounded-md focus:bg-[var(--surface)] focus:px-3 focus:py-2"
@@ -35,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main id="contenido" className="flex-1">
           {children}
         </main>
+        </ThemeProvider>
       </body>
     </html>
   );
