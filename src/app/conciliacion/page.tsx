@@ -1,26 +1,30 @@
+import { Inbox } from 'lucide-react';
 import { Aviso } from '@/app/_components/aviso';
-import { BotonEnviar } from '@/app/_components/boton-enviar';
 import { requerirSesion } from '@/app/_lib/autorizacion';
+import { MovimientoSugerencias } from '@/components/conciliacion/movimiento-sugerencias';
+import {
+  MENSAJE_SOLO_LECTURA,
+  SOLO_LECTURA_ID,
+} from '@/components/conciliacion/solo-lectura';
+import { EmptyState } from '@/components/ui/empty-state';
+import { sugerir } from '@/lib/conciliacion/sugerir';
+import { prisma } from '@/lib/db';
 import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
-import { confirmarAction } from './actions';
-import { sugerir, type Regla } from '@/lib/conciliacion/sugerir';
-import { prisma } from '@/lib/db';
-import { formatearClp, formatearFecha } from '@/lib/formato';
-
-const nombreRegla: Record<Regla, string> = {
-  MONTO_Y_FOLIO: 'Monto y folio',
-  MONTO_Y_FECHA: 'Monto y fecha',
-  DIFERENCIA_MENOR: 'Diferencia menor',
-};
 
 const MAX_MOVIMIENTOS = 100;
+const AVISO_YA_CONCILIADO =
+  'Otra persona confirmó este movimiento primero. Actualizamos la lista.';
 
 export default async function ConciliacionPage({
   searchParams,
 }: PageProps<'/conciliacion'>) {
   const session = await requerirSesion();
-  const aviso = leerAviso(await searchParams);
+  const params = await searchParams;
+  const aviso =
+    params.error === 'movimiento_ya_conciliado'
+      ? { tipo: 'error' as const, mensaje: AVISO_YA_CONCILIADO }
+      : leerAviso(params);
   const puedeConfirmar = puede(session.user.role, 'conciliacion:confirmar');
   const [movimientos, facturas] = await Promise.all([
     prisma.movimientoBancario.findMany({
@@ -40,6 +44,13 @@ export default async function ConciliacionPage({
     }),
   ]);
   const porId = new Map(facturas.map((f) => [f.id, f]));
+  const conSugerencias = movimientos.map((m) => ({
+    movimiento: m,
+    sugerencias: sugerir(m, facturas),
+  }));
+  const totalConSugerencia = conSugerencias.filter(
+    (c) => c.sugerencias.length > 0,
+  ).length;
 
   return (
     <div className="contenedor flex flex-col gap-6">
@@ -49,96 +60,40 @@ export default async function ConciliacionPage({
           Abonos sin conciliar y las facturas pendientes que podrían
           corresponderles. El sistema solo sugiere: una persona confirma.
         </p>
+        {movimientos.length > 0 && (
+          <p className="mt-2 text-sm font-medium tabular">
+            {movimientos.length}{' '}
+            {movimientos.length === 1 ? 'abono por conciliar' : 'abonos por conciliar'}
+            {' · '}
+            {totalConSugerencia}{' '}
+            {totalConSugerencia === 1 ? 'con sugerencia' : 'con sugerencias'}
+          </p>
+        )}
       </div>
       <Aviso aviso={aviso} />
+      {!puedeConfirmar && (
+        <p id={SOLO_LECTURA_ID} className="texto-suave">
+          {MENSAJE_SOLO_LECTURA}.
+        </p>
+      )}
 
       {movimientos.length === 0 ? (
-        <p className="tarjeta">No hay abonos pendientes de conciliar.</p>
+        <EmptyState
+          icon={Inbox}
+          title="No hay abonos pendientes de conciliar"
+          description="Importa una cartola para ver nuevas sugerencias."
+        />
       ) : (
-        <ul className="flex flex-col gap-4">
-          {movimientos.map((m) => {
-            const sugerencias = sugerir(m, facturas);
-            return (
-              <li key={m.id} className="tarjeta flex flex-col gap-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-semibold">{m.descripcion}</p>
-                  <p className="tabular-nums">
-                    {formatearFecha(m.fecha)} ·{' '}
-                    <strong>{formatearClp(m.montoClp)}</strong>
-                  </p>
-                </div>
-                {sugerencias.length === 0 ? (
-                  <p className="texto-suave">Sin sugerencias.</p>
-                ) : (
-                  <div className="tabla-scroll">
-                    <table className="tabla">
-                      <caption className="sr-only">
-                        Facturas sugeridas para {m.descripcion}
-                      </caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Folio</th>
-                          <th scope="col">Cliente</th>
-                          <th scope="col" className="num">
-                            Monto
-                          </th>
-                          <th scope="col">Regla</th>
-                          <th scope="col" className="num">
-                            Puntaje
-                          </th>
-                          <th scope="col" className="num">
-                            Diferencia
-                          </th>
-                          {puedeConfirmar && (
-                            <th scope="col">
-                              <span className="sr-only">Acción</span>
-                            </th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sugerencias.map((s) => {
-                          const f = porId.get(s.facturaId);
-                          if (!f) return null;
-                          return (
-                            <tr key={s.facturaId}>
-                              <td className="tabular-nums">{f.folio}</td>
-                              <td>{f.cliente.razonSocial}</td>
-                              <td className="num">
-                                {formatearClp(f.montoClp)}
-                              </td>
-                              <td>{nombreRegla[s.regla]}</td>
-                              <td className="num">{s.puntaje}</td>
-                              <td className="num">
-                                {formatearClp(s.diferenciaClp)}
-                              </td>
-                              {puedeConfirmar && (
-                                <td>
-                                  <form
-                                    action={confirmarAction.bind(
-                                      null,
-                                      m.id,
-                                      f.id,
-                                    )}
-                                  >
-                                    <BotonEnviar
-                                      texto="Confirmar"
-                                      textoPendiente="Confirmando…"
-                                      etiqueta={`Confirmar factura ${f.folio} para ${m.descripcion}`}
-                                    />
-                                  </form>
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </li>
-            );
-          })}
+        <ul className="flex flex-col gap-6">
+          {conSugerencias.map(({ movimiento, sugerencias }) => (
+            <MovimientoSugerencias
+              key={movimiento.id}
+              movimiento={movimiento}
+              sugerencias={sugerencias}
+              facturas={porId}
+              puedeConfirmar={puedeConfirmar}
+            />
+          ))}
         </ul>
       )}
     </div>

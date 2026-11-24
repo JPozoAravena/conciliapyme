@@ -130,3 +130,4 @@ Anything below goes beyond styling and would touch domain, actions, schema or au
 ## Out-of-scope notes
 
 - Pages still set their own `.contenedor`/`<h1 class="titulo">` markup; unify page headers in a later phase.
+- Import result has no rejected-row details (line number and reason): the importer aborts on the first bad row and reports it as a single URL error code; a per-row rejection list needs a domain change.

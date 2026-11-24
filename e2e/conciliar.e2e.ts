@@ -66,6 +66,9 @@ test('contador inicia sesión, importa una cartola y confirma una coincidencia',
       name: `Confirmar factura ${folio} para ${descripcion}`,
     })
     .click();
+  await page
+    .getByRole('button', { name: 'Confirmar conciliación', exact: true })
+    .click();
   await expect(page.getByRole('status')).toContainText(
     'Conciliación confirmada.',
   );
