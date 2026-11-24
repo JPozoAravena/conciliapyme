@@ -6,6 +6,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Card, CardTitle } from '@/components/ui/card';
+import { FadeIn } from '@/components/motion/fade-in';
 import { cn } from '@/components/ui/cn';
 import type { ResultadoVisible } from '@/lib/cartola/resultado';
 
@@ -14,14 +15,17 @@ function Cifra({
   etiqueta,
   Icono,
   destacada,
+  index,
 }: {
   valor: number;
   etiqueta: string;
   Icono: LucideIcon;
   destacada?: boolean;
+  index: number;
 }) {
   return (
-    <div
+    <FadeIn
+      index={index}
       className={cn(
         'flex items-start gap-3 rounded-lg border p-4',
         destacada ? 'border-ok-border bg-ok-soft' : 'border-border bg-background',
@@ -40,7 +44,7 @@ function Cifra({
         <dt className="text-sm text-muted">{etiqueta}</dt>
         <dd className="text-4xl font-bold leading-none tabular">{valor}</dd>
       </div>
-    </div>
+    </FadeIn>
   );
 }
 
@@ -71,8 +75,8 @@ export function ResultadoImportacion({
         </p>
       ) : (
         <dl className="mt-4 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
-          <Cifra valor={resultado.nuevas} etiqueta="Movimientos nuevos" Icono={FilePlus2} destacada />
-          <Cifra valor={resultado.omitidas} etiqueta="Duplicados ignorados" Icono={CopyMinus} />
+          <Cifra valor={resultado.nuevas} etiqueta="Movimientos nuevos" Icono={FilePlus2} destacada index={0} />
+          <Cifra valor={resultado.omitidas} etiqueta="Duplicados ignorados" Icono={CopyMinus} index={1} />
         </dl>
       )}
     </Card>

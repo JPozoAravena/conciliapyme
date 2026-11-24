@@ -134,3 +134,8 @@ Anything below goes beyond styling and would touch domain, actions, schema or au
 - Dashboard imports show file, bank, total rows and status only: the import log stores no new/duplicate row counts; adding them needs a domain/schema change.
 - Filtered lists scan `Factura` by `estado`, `clienteId` and `emision` with no secondary indexes; add them in a migration if data grows.
 - Client search matches RUT as stored (no dot/hyphen normalization).
+- Toasts do not announce twice only because Sonner renders no `role="status"`; if the library changes, scope E2E `getByRole('status')` to `main`.
+- After a toast fires, `router.replace` clears the URL notice and the in-page banner disappears on the soft navigation; E2E assertions on the banner may need `toast`/early checks if they prove flaky.
+- The reconciliation suggestion card has no exit animation after confirm: the flow is a server redirect, so animating it needs a client-side confirm flow.
+- Login keeps its error banner only (no toast), since the form stays on screen.
+- Legacy components (`Campo`, `BotonEnviar`, `.tarjeta`/`.aviso` classes) remain in client/invoice forms and should migrate to `Field`/`SubmitButton`.

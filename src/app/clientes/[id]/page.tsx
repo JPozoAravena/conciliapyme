@@ -8,13 +8,14 @@ import { requerirSesion } from '@/app/_lib/autorizacion';
 import { listarFacturas } from '@/app/_lib/facturas-listado';
 import { leerFiltrosFacturas, paramsFacturas } from '@/app/_lib/facturas-params';
 import { POR_PAGINA } from '@/app/_lib/listado-params';
+import { avisoDesdeUrl } from '@/components/feedback/mensajes';
+import { UrlToast } from '@/components/feedback/url-toast';
 import { Pagination } from '@/components/data-table/pagination';
 import { FacturasFiltros } from '@/components/facturas/facturas-filtros';
 import { FacturasTabla } from '@/components/facturas/facturas-tabla';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { prisma } from '@/lib/db';
-import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
 import { idSchema } from '@/lib/schemas';
 import { actualizarCliente, crearFactura, eliminarCliente } from '../actions';
@@ -30,7 +31,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<'/
   if (!cliente) notFound();
 
   const query = await searchParams;
-  const aviso = leerAviso(query);
+  const aviso = avisoDesdeUrl(query);
   const filtros = { ...leerFiltrosFacturas(query), cliente: cliente.id };
   const facturas = await listarFacturas(filtros);
   const base = `/clientes/${cliente.id}`;
@@ -47,6 +48,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<'/
         <p className='texto-suave mt-1 tabular-nums'>RUT {cliente.rut}</p>
       </div>
       <Aviso aviso={aviso} />
+      <UrlToast aviso={aviso} />
 
       <section aria-labelledby='facturas' className='flex flex-col gap-3'>
         <h2 id='facturas' className='subtitulo'>
@@ -56,7 +58,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<'/
         {facturas.total === 0 ? (
           <EmptyState
             icon={FileText}
-            title={filtros.estado ? 'No hay facturas con este estado' : 'Este cliente no tiene facturas.'}
+            title={filtros.estado ? 'No hay facturas con este estado' : 'Este cliente aún no tiene facturas'}
             description={
               !filtros.estado && puedeGestionar ? 'Agrega la primera con el formulario de más abajo.' : undefined
             }
@@ -64,6 +66,10 @@ export default async function ClientePage({ params, searchParams }: PageProps<'/
               filtros.estado ? (
                 <Button asChild variant='secondary'>
                   <Link href={base}>Limpiar filtros</Link>
+                </Button>
+              ) : puedeGestionar ? (
+                <Button asChild>
+                  <Link href='#nueva-factura'>Agregar factura</Link>
                 </Button>
               ) : undefined
             }

@@ -9,10 +9,11 @@ import { leerFiltrosClientes, paramsClientes } from '@/app/_lib/clientes-params'
 import { POR_PAGINA } from '@/app/_lib/listado-params';
 import { ClientesBusqueda } from '@/components/clientes/clientes-busqueda';
 import { ClientesTabla } from '@/components/clientes/clientes-tabla';
+import { avisoDesdeUrl } from '@/components/feedback/mensajes';
+import { UrlToast } from '@/components/feedback/url-toast';
 import { Pagination } from '@/components/data-table/pagination';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
 import { crearCliente } from './actions';
 
@@ -21,7 +22,7 @@ const BASE = '/clientes';
 export default async function ClientesPage({ searchParams }: PageProps<'/clientes'>) {
   const session = await requerirSesion();
   const query = await searchParams;
-  const aviso = leerAviso(query);
+  const aviso = avisoDesdeUrl(query);
   const filtros = leerFiltrosClientes(query);
   const puedeGestionar = puede(session.user.role, 'cliente:gestionar');
   const pagina = await listarClientes(filtros);
@@ -37,12 +38,13 @@ export default async function ClientesPage({ searchParams }: PageProps<'/cliente
         </p>
       </div>
       <Aviso aviso={aviso} />
+      <UrlToast aviso={aviso} />
       <ClientesBusqueda base={BASE} filtros={filtros} />
 
       {pagina.total === 0 ? (
         <EmptyState
           icon={Users}
-          title={filtros.q ? 'No hay clientes con esa búsqueda' : 'Aún no hay clientes registrados.'}
+          title={filtros.q ? 'No hay clientes con esa búsqueda' : 'Aún no hay clientes'}
           description={
             filtros.q
               ? 'Revisa el nombre o RUT, o quita la búsqueda.'
@@ -54,6 +56,10 @@ export default async function ClientesPage({ searchParams }: PageProps<'/cliente
             filtros.q ? (
               <Button asChild variant='secondary'>
                 <Link href={BASE}>Limpiar búsqueda</Link>
+              </Button>
+            ) : puedeGestionar ? (
+              <Button asChild>
+                <Link href='#nuevo-cliente'>Crear cliente</Link>
               </Button>
             ) : undefined
           }

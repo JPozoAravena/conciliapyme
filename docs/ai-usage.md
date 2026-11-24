@@ -25,3 +25,32 @@ Builder and auditor roles were separated: one agent wrote the code, a second, in
 | Compensation could delete movements that another import had counted as existing | Medium | Fixed | The PostgreSQL `createMany` is the commit point: compensation only undoes MongoDB, and a `PROCESANDO` import that already stored movements is completed instead of deleted. Covered by integration tests |
 | A slow import (over 5 minutes) could be taken for abandoned and wiped | Low | Fixed | `updatedAt` is refreshed before writing to PostgreSQL, abandoned records are claimed atomically (`findOneAndDelete` on the `updatedAt` that was read), and movements are never deleted |
 | Line hash collides for identical same-day payments that arrive in different files | Low | Fixed | Hash now includes the running balance (bank A) or reference (bank B); an integration test shows overlapping statements still do not duplicate. Two accounts of the same bank remain indistinguishable (the CSV has no account column): accepted and documented in ADR 0002 |
+
+## UI/UX upgrade (phases 0 to 5)
+
+The AI proposed and built; the owner reviewed and decided each open point.
+
+What the AI proposed:
+
+- Phase 0: UI/UX audit and phased plan (`docs/ux/audit.md`).
+- Phase 1: OKLCH design tokens, theme toggle and UI primitives.
+- Phase 2: collapsible app shell, mobile navigation and route states.
+- Phase 3: redesigned statement import and reconciliation views.
+- Phase 4: dashboard, global invoices view, data tables and audit timeline.
+- Phase 5: toasts, empty states with permission-aware actions, subtle motion (reduced-motion safe), login redesign, docs.
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Dashboard KPIs | Read-only queries in `src/app/_lib`, with integration tests | No domain or schema change |
+| `/facturas` | Global read-only view | Invoices are still created from the client page |
+| URL notice codes | Kept in the URL, plus a toast from one code-to-message dictionary; params removed with `router.replace` | Works without JS; a reload does not repeat the toast |
+| Auditoría for DUENO | Kept visible | Read-only role still needs traceability |
+| "Campos que coinciden" | Computed in presentation with mirrored constants | `src/lib` does not export the rule constants |
+| Tables | No TanStack Table; server-side URL sorting and pagination | Fewer dependencies, shareable URLs |
+
+Pending verification:
+
+- Tests, E2E, axe and Lighthouse were not run in this pass; after-screenshots were not taken.
+- Indexes on `Factura` (`estado`, `clienteId`, `emision`) await an owner decision.
+- The import log lacks new/duplicate counts.
+- The importer stops at the first bad row.

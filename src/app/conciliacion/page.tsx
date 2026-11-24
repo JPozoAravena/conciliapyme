@@ -1,31 +1,30 @@
 import { Inbox } from 'lucide-react';
+import Link from 'next/link';
 import { Aviso } from '@/app/_components/aviso';
 import { requerirSesion } from '@/app/_lib/autorizacion';
+import { avisoDesdeUrl } from '@/components/feedback/mensajes';
+import { UrlToast } from '@/components/feedback/url-toast';
 import { MovimientoSugerencias } from '@/components/conciliacion/movimiento-sugerencias';
 import {
   MENSAJE_SOLO_LECTURA,
   SOLO_LECTURA_ID,
 } from '@/components/conciliacion/solo-lectura';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { sugerir } from '@/lib/conciliacion/sugerir';
 import { prisma } from '@/lib/db';
-import { leerAviso } from '@/lib/errores';
 import { puede } from '@/lib/rbac';
 
 const MAX_MOVIMIENTOS = 100;
-const AVISO_YA_CONCILIADO =
-  'Otra persona confirmó este movimiento primero. Actualizamos la lista.';
 
 export default async function ConciliacionPage({
   searchParams,
 }: PageProps<'/conciliacion'>) {
   const session = await requerirSesion();
   const params = await searchParams;
-  const aviso =
-    params.error === 'movimiento_ya_conciliado'
-      ? { tipo: 'error' as const, mensaje: AVISO_YA_CONCILIADO }
-      : leerAviso(params);
+  const aviso = avisoDesdeUrl(params);
   const puedeConfirmar = puede(session.user.role, 'conciliacion:confirmar');
+  const puedeImportar = puede(session.user.role, 'cartola:importar');
   const [movimientos, facturas] = await Promise.all([
     prisma.movimientoBancario.findMany({
       where: { estado: 'SIN_CONCILIAR', montoClp: { gt: 0 } },
@@ -71,6 +70,7 @@ export default async function ConciliacionPage({
         )}
       </div>
       <Aviso aviso={aviso} />
+      <UrlToast aviso={aviso} />
       {!puedeConfirmar && (
         <p id={SOLO_LECTURA_ID} className="texto-suave">
           {MENSAJE_SOLO_LECTURA}.
@@ -81,7 +81,18 @@ export default async function ConciliacionPage({
         <EmptyState
           icon={Inbox}
           title="No hay abonos pendientes de conciliar"
-          description="Importa una cartola para ver nuevas sugerencias."
+          description={
+            puedeImportar
+              ? 'Importa una cartola para ver nuevas sugerencias.'
+              : 'Cuando se importe una cartola verás aquí las sugerencias.'
+          }
+          action={
+            <Button asChild variant="secondary">
+              <Link href={puedeImportar ? '/importar' : '/facturas'}>
+                {puedeImportar ? 'Importar cartola' : 'Ver facturas'}
+              </Link>
+            </Button>
+          }
         />
       ) : (
         <ul className="flex flex-col gap-6">

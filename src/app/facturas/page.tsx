@@ -1,3 +1,4 @@
+import { requerirSesion } from '@/app/_lib/autorizacion';
 import { listarFacturas } from '@/app/_lib/facturas-listado';
 import { leerFiltrosFacturas, paramsFacturas } from '@/app/_lib/facturas-params';
 import { opcionesClientes } from '@/app/_lib/clientes-listado';
@@ -6,10 +7,12 @@ import { Pagination } from '@/components/data-table/pagination';
 import { FacturasFiltros } from '@/components/facturas/facturas-filtros';
 import { FacturasTabla } from '@/components/facturas/facturas-tabla';
 import { FacturasVacio } from '@/components/facturas/facturas-vacio';
+import { puede } from '@/lib/rbac';
 
 const BASE = '/facturas';
 
 export default async function FacturasPage({ searchParams }: PageProps<'/facturas'>) {
+  const session = await requerirSesion();
   const filtros = leerFiltrosFacturas(await searchParams);
   const [pagina, clientes] = await Promise.all([listarFacturas(filtros), opcionesClientes()]);
   const params = paramsFacturas(filtros);
@@ -23,7 +26,11 @@ export default async function FacturasPage({ searchParams }: PageProps<'/factura
       </div>
       <FacturasFiltros base={BASE} filtros={filtros} clientes={clientes} />
       {pagina.total === 0 ? (
-        <FacturasVacio base={BASE} conFiltros={conFiltros} />
+        <FacturasVacio
+          base={BASE}
+          conFiltros={conFiltros}
+          puedeGestionar={puede(session.user.role, 'cliente:gestionar')}
+        />
       ) : (
         <>
           <FacturasTabla

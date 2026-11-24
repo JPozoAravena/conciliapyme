@@ -28,6 +28,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps<'/audito
   const filtros = leerFiltros(await searchParams);
   const { eventos, total, paginas } = await listarAuditoria(filtros);
   const { correos, facturas } = await cargarContextoAuditoria(eventos);
+  const conFiltros = Boolean(filtros.accion || filtros.desde || filtros.hasta);
   const params = {
     accion: filtros.accion,
     desde: filtros.desde && fechaParaInput(filtros.desde),
@@ -44,11 +45,18 @@ export default async function AuditoriaPage({ searchParams }: PageProps<'/audito
       {eventos.length === 0 ? (
         <EmptyState
           icon={ScrollText}
-          title="No hay eventos con estos filtros"
+          title={conFiltros ? 'No hay eventos con estos filtros' : 'Aún no hay eventos'}
+          description={
+            conFiltros
+              ? undefined
+              : 'Aparecerán cuando se importen cartolas o se confirmen conciliaciones.'
+          }
           action={
-            <Button asChild variant="secondary">
-              <Link href="/auditoria">Limpiar filtros</Link>
-            </Button>
+            conFiltros ? (
+              <Button asChild variant="secondary">
+                <Link href="/auditoria">Limpiar filtros</Link>
+              </Button>
+            ) : undefined
           }
         />
       ) : (
